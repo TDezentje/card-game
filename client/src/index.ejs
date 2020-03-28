@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <base href="/">
+
+
+    <% if (MODE === 'DEV') { %>
+        <script type="text/javascript">
+            var currentId = '';
+            var timeout = 500;
+
+            function connect() {
+                
+                var liveReload = new WebSocket("ws://" + location.hostname + ':8081');
+                liveReload.onmessage = function (event) {
+                    if (currentId && currentId !== event.data) {
+                        window.location.reload();
+                    }
+
+                    currentId = event.data;
+                };
+
+                liveReload.onopen = function () {
+                    timeout = 500;
+                };
+
+                liveReload.onclose = function () {
+                    timeout += 500;
+                    setTimeout(connect, timeout);
+                };
+            }
+
+            connect();
+        </script>
+    <% } %>
+
+    <% if (MODE === 'DEV') { %>
+        <% for (file of htmlWebpackPlugin.files.js) { %>
+            <script type="text/javascript" src="<%= file %>"></script>
+        <% } %>
+    <% } %>
+    <% if (MODE === 'PROD' || MODE === 'UITST') { %>
+        <% for (file of htmlWebpackPlugin.files.js) { %>
+            <script type="text/javascript">
+                <%= compilation.assets[file].source() %>
+            </script>
+        <% } %>
+    <% } %>
+</head>
+
+<body></body>
+
+</html>
