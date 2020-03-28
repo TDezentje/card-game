@@ -2,7 +2,7 @@ export class Card {
     corner: CardCorner;
     guid: string;
     display: string;
-    canBeUsed: boolean;
+    canBeUsed?: boolean;
 }
 
 export class CardCorner {

@@ -1,40 +1,44 @@
-import { RoomService } from './room.service';
-import { PlayerService } from './player.service';
-const uuid = require('uuid/v4');
+import { GameService } from './game.service';
 
 const WebSocket = require('ws');
 
 export class WebsocketService {
     private wssGame;
-    private room;
-    private playerService;
-    private roomService;
+    private gameService: GameService = new GameService();
 
     public createWebserver() {
-        this.roomService = new RoomService();
-        this.playerService = new PlayerService();
-        this.room = this.roomService.createRoom();
+        this.gameService.loadGames();
+        this.gameService.createGame();
 
         this.wssGame = new WebSocket.Server({ port: 8001 });
         this.wssGame.on('connection', (ws) => {
-            const player = this.playerService.createPlayer();
-            this.roomService.addUserToRoom(this.room.guid, player);
+            const player = this.gameService.joinGame();
             ws.isAlive = true;
             ws.playerGuid = player.guid;
-            ws.roomGuid = this.room.guid;
             ws.on('pong', () => ws.isAlive = true);
             ws.send(JSON.stringify(player));
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const self = this;
+            ws.on('message', function (data) {
+                if (data === "stop") {
+                    self.gameService.stopGame(this.playerGuid);
+                    this.send("stopped");
+                }
+
+                if (data === "start") {
+                    self.gameService.startGame(this.playerGuid);
+                    this.send("started");
+                }
+
+                if (data === "join") {
+                    const player = self.gameService.joinGame();
+                    this.send(JSON.stringify(player));
+                }
+            });
         });
 
         const cleanUpInterval = setInterval(() => {
-            for (const roomGuid of Object.keys(this.roomService.getRooms())) {
-                const room = this.roomService.getRooms()[roomGuid];
-                const playersInRoom = Array.from(this.wssGame.clients).filter(client => (client as any).roomGuid === room.guid).map(client => (client as any).playerGuid);
-                const closedPlayers = room.players.filter(p => playersInRoom.every(pir => pir !== p.guid));
-                for (const closedPlayer of closedPlayers) {
-                    this.roomService.deleteUserFromRoom(room.guid, closedPlayer);
-                }
-            }            
+            this.gameService.cleanUpInActiveUsers(Array.from(this.wssGame.clients));
         }, 30000);
 
         const interval = setInterval(() => {
@@ -45,7 +49,6 @@ export class WebsocketService {
 
                 ws.isAlive = false;
                 ws.ping();
-                ws.send(JSON.stringify(this.roomService.getRooms()[ws.roomGuid]));
             });
         }, 5000);
 
@@ -53,13 +56,5 @@ export class WebsocketService {
             clearInterval(interval);
             clearInterval(cleanUpInterval);
         });
-    }
-
-    public sendToUser() {
-        // this.wssGame.clients.forEach(function each(client) {
-        //     if (client !== ws && client.readyState === WebSocket.OPEN) {
-        //       client.send(data);
-        //     }
-        //   });
     }
 }
