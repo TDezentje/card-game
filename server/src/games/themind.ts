@@ -8,6 +8,7 @@ export class TheMind {
             "turnTime": null,
             "maxPlayer": null,
             "numberOfCardsInHand": 2,
+            "allowInvalidMoves": false,
             "rules": [
                 {
                     "property": "display",

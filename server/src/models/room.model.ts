@@ -6,6 +6,5 @@ export class Room {
     guid: string;
     isStarted: boolean;
     players: Player[];
-    nextPlayer?: Player;
     game: Game;
 }

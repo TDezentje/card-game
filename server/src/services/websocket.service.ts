@@ -1,4 +1,6 @@
 import { GameService } from './game.service';
+import { Turn } from 'models/turn.model';
+import { State } from 'models/game-state.model';
 
 const WebSocket = require('ws');
 
@@ -20,19 +22,47 @@ export class WebsocketService {
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const self = this;
             ws.on('message', function (data) {
-                if (data === "stop") {
-                    self.gameService.stopGame(this.playerGuid);
-                    this.send("stopped");
+                const turn: Turn = JSON.parse(data);
+                if (turn.action === "stop") {
+                    const result = self.gameService.stopGame(this.playerGuid);
+                    if (result.state === State.Stopped) {
+                        self.broadcastMessage(result);
+                    } else {
+                        this.send(JSON.stringify(result));
+                    }
                 }
 
-                if (data === "start") {
-                    self.gameService.startGame(this.playerGuid);
-                    this.send("started");
+                if (turn.action === "start") {
+                    const result = self.gameService.startGame(this.playerGuid);
+                    if (result.state === State.Stopped) {
+                        self.broadcastMessage(result);
+                    } else {
+                        this.send(JSON.stringify(result));
+                    }
                 }
 
-                if (data === "join") {
+                if (turn.action === "join") {
                     const player = self.gameService.joinGame();
                     this.send(JSON.stringify(player));
+                }
+
+                if (turn.action === "play") {
+                    const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);
+                    if (result.gameOver) {
+                        self.broadcastMessage(result);
+                    } else {
+                        this.send(JSON.stringify(result));
+                    }
+                }
+
+                if (turn.action === "cardsOnStack") {
+                    const result = self.gameService.getCardsOnStackFromGame(this.playerGuid);
+                    this.send(JSON.stringify(result));
+                }
+
+                if (turn.action === "cardsToUse") {
+                    const result = self.gameService.getCardsToUseFromGame(this.playerGuid);
+                    this.send(JSON.stringify(result));
                 }
             });
         });
@@ -55,6 +85,14 @@ export class WebsocketService {
         this.wssGame.on('close', () => {
             clearInterval(interval);
             clearInterval(cleanUpInterval);
+        });
+    }
+
+    private broadcastMessage(message) {
+        this.wssGame.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(message));
+            }
         });
     }
 }

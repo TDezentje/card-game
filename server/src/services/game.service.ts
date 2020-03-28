@@ -1,9 +1,10 @@
 import { Game } from 'models/game.model';
 import { TheMind } from 'games/themind';
 import { Player } from 'models/player.model';
-import { Card } from 'models/card.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
+import { Valid } from 'models/valid.model';
+import { GameState, State } from 'models/game-state.model';
 
 export class GameService {
     private activeGameInRooms: { [roomId: string]: Game } = {};
@@ -14,7 +15,8 @@ export class GameService {
     public loadGames() {
         this.games = [];
         const theMind = TheMind.game;
-        theMind.usedCards = theMind.cards;
+        theMind.cardsToUse = theMind.cards;
+        theMind.cardsOnStack = [];
         this.games.push(theMind);
     }
 
@@ -24,21 +26,33 @@ export class GameService {
         this.activeGameInRooms[room.guid] = game;
     }
 
-    public startGame(playerGuid: string) {
-        const player = this.playerService.getPlayer(playerGuid);
-        if (player.isAdmin) {
-            const room = this.roomService.getRooms().find(r => r.players.some(p => p.guid === playerGuid));
-            this.roomService.startRoom(room.guid);
-        }
+    public getGameInRoom(roomGuid: string) {
+        return this.activeGameInRooms[roomGuid];
     }
 
-    public stopGame(playerGuid: string) {
+    public startGame(playerGuid: string): GameState{
         const player = this.playerService.getPlayer(playerGuid);
+        const gameState = new GameState();
         if (player.isAdmin) {
-            const room = this.roomService.getRooms().find(r => r.players.some(p => p.guid === playerGuid));
+            const room = this.getRoomByPlayerGuid(playerGuid);
+            this.roomService.startRoom(room.guid);
+            gameState.state = State.Started;
+            return gameState;
+        }
+        return gameState;
+    }
+
+    public stopGame(playerGuid: string): GameState {
+        const player = this.playerService.getPlayer(playerGuid);
+        const gameState = new GameState();
+        if (player.isAdmin) {
+            const room = this.getRoomByPlayerGuid(playerGuid);
             this.roomService.deleteRoom(room.guid);
             this.activeGameInRooms[room.guid] = null;
+            gameState.state = State.Stopped;
+            return gameState;
         }
+        return gameState;
     }
 
     public joinGame(): Player {
@@ -72,34 +86,65 @@ export class GameService {
         return this.games[idx];
     }
 
-    public getCardsFromGame(roomGuid: string) {
-        return this.activeGameInRooms[roomGuid].cards;
+    public getCardsFromGame(playerGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        return this.activeGameInRooms[room.guid].cards;
     }
 
-    public getUsedCardsFromGame(roomGuid: string) {
-        return this.activeGameInRooms[roomGuid].usedCards;
+    public getCardsToUseFromGame(playerGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        return this.activeGameInRooms[room.guid].cardsToUse;
+    }
+
+    public getCardsOnStackFromGame(playerGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        return this.activeGameInRooms[room.guid].cardsOnStack;
     }
 
     public getNewCardsInHand(roomGuid: string, player: Player) {
         player.cards = [];
         const activeGameInRoom = this.activeGameInRooms[roomGuid];
         for (let idx = 0; idx < activeGameInRoom.numberOfCardsInHand; idx++) {
-            const randomIdx = Math.floor(Math.random() * Math.floor(this.activeGameInRooms[roomGuid].usedCards.length));
-            const card = activeGameInRoom.usedCards.splice(randomIdx, 1);
+            const randomIdx = Math.floor(Math.random() * Math.floor(this.activeGameInRooms[roomGuid].cardsToUse.length));
+            const card = activeGameInRoom.cardsToUse.splice(randomIdx, 1);
             player.cards.push(...card);
         }
     }
 
-    public isValidMove(roomGuid: string, card: Card): boolean {
+    public playCard(playerGuid: string, cardGuid: string): Valid {
+        const player = this.playerService.getPlayer(playerGuid);
+        const room = this.getRoomByPlayerGuid(player.guid);
+        const valid = new Valid();
+        const game = this.getGameInRoom(room.guid);
+        if (!this.isValidMove(room.guid, cardGuid)) {
+            valid.gameOver =  !game.allowInvalidMoves;
+            valid.result = false;
+        } else {
+            valid.gameOver = false;
+            valid.result = true;
+        }
+        return valid;
+    }
+
+    private isValidMove(roomGuid: string, cardGuid: string): boolean {
         const activeGameInRoom = this.activeGameInRooms[roomGuid];
-        const lastPlayedCard = activeGameInRoom.stackCards[activeGameInRoom.stackCards.length - 1];
+        const lastCardIdx = activeGameInRoom.cardsOnStack.length - 1;
+        let lastPlayedCard;
+        if (lastCardIdx >= 0) {
+            lastPlayedCard = activeGameInRoom.cardsOnStack[lastCardIdx];
+        }
+        const card = activeGameInRoom.cards.find(c => c.guid === cardGuid);
         for (const rule of activeGameInRoom.rules) {
             if (rule.operation === "bigger") {
-                if (lastPlayedCard[rule.property] < card[rule.property]) {
+                if (!lastPlayedCard || lastPlayedCard[rule.property] < card[rule.property]) {
                     return true;
                 }
                 return false;
             }
         }
+    }
+
+    private getRoomByPlayerGuid(playerGuid: string) {
+        return this.roomService.getRooms().find(r => r.players.some(p => p.guid === playerGuid));
     }
 }

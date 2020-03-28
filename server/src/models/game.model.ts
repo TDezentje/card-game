@@ -7,8 +7,9 @@ export class Game {
     turnTime?: number;
     numberOfCardsInHand?: number;
     maxPlayer?: number;
+    allowInvalidMoves: boolean;
     rules: Rule[];
     cards: Card[];
-    usedCards?: Card[];
-    stackCards?: Card[] = [];
+    cardsToUse?: Card[];
+    cardsOnStack?: Card[];
 }
