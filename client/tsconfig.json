@@ -9,6 +9,7 @@
         }
     },
     "include": [
-        "**/*.ts", "src/app/app.element.tsx", "src/bootstrap.tsx"
+        "**/*.ts",
+        "**/*.tsx"
     ]
 }
