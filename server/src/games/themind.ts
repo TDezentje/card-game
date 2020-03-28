@@ -1,7 +1,30 @@
 import { Game } from 'models/game.model';
+import { GameContract } from 'games/game.contract';
 
-export class TheMind {
-    public static game: Game =
+export class TheMind implements GameContract {
+    public isValidCard(cardGuid){
+        this.game
+ // const activeGameInRoom = this.getGameInRoom(roomGuid);
+        // const lastCardIdx = activeGameInRoom.cardsOnStack.length - 1;
+        // let lastPlayedCard;
+        // if (lastCardIdx >= 0) {
+        //     lastPlayedCard = activeGameInRoom.cardsOnStack[lastCardIdx];
+        // }
+        // const card = activeGameInRoom.cards.find(c => c.guid === cardGuid);
+        // let isValid = true;
+        // for (const rule of activeGameInRoom.rules) {
+        //     if (rule.operation === "bigger") {
+        //         if (lastPlayedCard && lastPlayedCard[rule.property] >= card[rule.property]) {
+        //             isValid = false;                    
+        //             break;
+        //         }
+        //     }
+        // }
+        // activeGameInRoom.cardsOnStack.push(card);
+        // return isValid;
+    }
+
+    public game: Game =
         {
             "name": "The mind",
             "turnBased": false,
@@ -9,12 +32,6 @@ export class TheMind {
             "maxPlayer": null,
             "numberOfCardsInHand": 5,
             "allowInvalidMoves": false,
-                "rules": [
-                    {
-                        "property": "display",
-                        "operation": "bigger"
-                    }
-                ],
             "cards": [
                 {
                     "guid": "6ebc1ede-beb5-4be9-ad01-769862f29c80",
@@ -1018,4 +1035,5 @@ export class TheMind {
                 }
             ]
         }
-}
+
+    }

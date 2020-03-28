@@ -13,8 +13,8 @@ export class GameService {
 
     public loadGames() {
         this.games = [];
-        const theMind = TheMind.game;
-        theMind.cardsToUse = JSON.parse(JSON.stringify(theMind.cards));
+        const theMind = new TheMind();
+        theMind.cardsToUse = []; //JSON.parse(JSON.stringify(theMind.cards));
         theMind.cardsOnStack = [];
         this.games.push(theMind);
     }
@@ -127,24 +127,25 @@ export class GameService {
     }
 
     private isValidMove(roomGuid: string, cardGuid: string): boolean {
-        const activeGameInRoom = this.getGameInRoom(roomGuid);
-        const lastCardIdx = activeGameInRoom.cardsOnStack.length - 1;
-        let lastPlayedCard;
-        if (lastCardIdx >= 0) {
-            lastPlayedCard = activeGameInRoom.cardsOnStack[lastCardIdx];
-        }
-        const card = activeGameInRoom.cards.find(c => c.guid === cardGuid);
-        let isValid = true;
-        for (const rule of activeGameInRoom.rules) {
-            if (rule.operation === "bigger") {
-                if (lastPlayedCard && lastPlayedCard[rule.property] >= card[rule.property]) {
-                    isValid = false;                    
-                    break;
-                }
-            }
-        }
-        activeGameInRoom.cardsOnStack.push(card);
-        return isValid;
+        return true;
+        // const activeGameInRoom = this.getGameInRoom(roomGuid);
+        // const lastCardIdx = activeGameInRoom.cardsOnStack.length - 1;
+        // let lastPlayedCard;
+        // if (lastCardIdx >= 0) {
+        //     lastPlayedCard = activeGameInRoom.cardsOnStack[lastCardIdx];
+        // }
+        // const card = activeGameInRoom.cards.find(c => c.guid === cardGuid);
+        // let isValid = true;
+        // for (const rule of activeGameInRoom.rules) {
+        //     if (rule.operation === "bigger") {
+        //         if (lastPlayedCard && lastPlayedCard[rule.property] >= card[rule.property]) {
+        //             isValid = false;                    
+        //             break;
+        //         }
+        //     }
+        // }
+        // activeGameInRoom.cardsOnStack.push(card);
+        // return isValid;
     }
 
     public getRoomByPlayerGuid(playerGuid: string) {
