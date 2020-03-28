@@ -53,7 +53,7 @@ export class GameState {
             if (relativeIndex < 0) {
                 relativeIndex = this.players.length - relativeIndex;
             }
-            player.tick(screenSize, this.table, relativeIndex, this.players.length);
+            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length);
         }
 
         this.afterTick?.();

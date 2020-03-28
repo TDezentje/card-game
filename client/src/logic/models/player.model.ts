@@ -1,6 +1,7 @@
 import { Card, CARD_HEIGHT, CARD_WIDTH } from './card.model';
 import { Table } from './table.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
+import { getTweenValue } from 'logic/helpers/animation.helper';
 
 export class Player {
     public name: string;
@@ -12,14 +13,24 @@ export class Player {
     public positionX: number;
     public positionY: number;
 
+    public futureDegrees;
+    public degrees: number;
+
     public constructor(obj) {
         Object.assign(this, obj);
     }
 
-    public tick(screenSize: ScreenSize, table: Table, index: number, playerCount: number) {
+    public tick(deltaT: number, screenSize: ScreenSize, table: Table, index: number, playerCount: number) {
         const htmlDegrees = (360 / playerCount * index);
-        const degrees = htmlDegrees + 90;
-        const radians = degrees * Math.PI/180;
+        this.futureDegrees = htmlDegrees + 90;
+
+        if (this.degrees === undefined) {
+            this.degrees = this.futureDegrees;
+        } else {
+            this.degrees = getTweenValue(this.degrees, this.futureDegrees, deltaT, 5);
+        }
+
+        const radians = this.degrees * Math.PI/180;
 
         this.positionX = (screenSize.width/2) + (table.radius * Math.cos(radians));
         this.positionY = (screenSize.height/2) + (table.radius * Math.sin(radians));
