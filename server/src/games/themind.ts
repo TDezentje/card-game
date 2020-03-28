@@ -4,7 +4,7 @@ import { GameLogic } from './game.logic';
 
 export class TheMind extends GameLogic {
     public isValidCard(cardGuid: string, cardsOnStack: Card[], cardsToUse: Card[]) {
-        const cardsInCurrentGame = this.game.cards.filter(c => !cardsToUse.some(ctu => ctu.guid === c.guid));
+        const cardsInCurrentGame = this.game.cards.filter(c => !cardsToUse.some(ctu => ctu.guid == c.guid));
         const nextCard = cardsInCurrentGame.find(c => !cardsOnStack.some(ctu => ctu.guid === c.guid));
         return nextCard.guid === cardGuid;
     }
