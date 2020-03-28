@@ -87,42 +87,9 @@ export class GameService {
         return gameState;
     }
 
-    public cleanUpInActiveUsers(clients) {
-        for (const room of this.roomService.getRooms()) {
-            const playersInRoom = clients.filter(client => (client as any).roomGuid === room.guid).map(client => (client as any).playerGuid);
-            const closedPlayers = room.players.filter(p => playersInRoom.every(pir => pir !== p.guid));
-            for (const closedPlayer of closedPlayers) {
-                this.roomService.deleteUserFromRoom(room.guid, closedPlayer);
-            }
-        }
-    }
-
     public getRandomGame() {
         const idx = Math.floor(Math.random() * Math.floor(this.games.length));
         return this.games[idx];
-    }
-
-    public getCardsFromGame(playerGuid: string) {
-        const room = this.getRoomByPlayerGuid(playerGuid);
-        return this.activeGameInRooms[room.guid].cards;
-    }
-
-    public getCardsToUseFromGame(playerGuid: string) {
-        const room = this.getRoomByPlayerGuid(playerGuid);     
-        const gameState = new GameState();
-        gameState.players = room.players;
-        gameState.action = "cardsToUse";
-        gameState.data = this.activeGameInRooms[room.guid].cardsToUse;
-        return gameState;
-    }
-
-    public getCardsOnStackFromGame(playerGuid: string): GameState {
-        const room = this.getRoomByPlayerGuid(playerGuid);
-        const gameState = new GameState();
-        gameState.players = room.players;
-        gameState.action = "cardsOnStack";
-        gameState.data = this.activeGameInRooms[room.guid].cardsOnStack;
-        return gameState;
     }
 
     public getNewCardsInHand(roomGuid: string, player: Player) {

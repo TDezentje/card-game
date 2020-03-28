@@ -86,29 +86,6 @@ export class WebsocketService {
                         });
                     }
                 }
-
-                if (turn.action === "getcards") {
-                    const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);
-                    if (result.data.gameOver) {
-                        self.broadcastMessage({
-                            action: "gameover",
-                            isStarted: false,
-                            players: result.players
-                        });
-                    } else {
-                        this.send(JSON.stringify(result));
-                    }
-                }
-
-                if (turn.action === "cardsOnStack") {
-                    const result = self.gameService.getCardsOnStackFromGame(this.playerGuid);
-                    this.send(JSON.stringify(result));
-                }
-
-                if (turn.action === "cardsToUse") {
-                    const result = self.gameService.getCardsToUseFromGame(this.playerGuid);
-                    this.send(JSON.stringify(result));
-                }
             });
 
             ws.on('close', function () {
