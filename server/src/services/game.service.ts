@@ -144,17 +144,16 @@ export class GameService {
             return p;
         });
         const valid = {
+            gameOver: false,
+            result: true,
             card: card
-        }
+        };
         const gameState = new GameState();
         gameState.players = room.players;
         gameState.action = "play";
         if (!this.isValidMove(room.guid, cardGuid)) {
             valid.gameOver =  !game.allowInvalidMoves;
             valid.result = false;
-        } else {
-            valid.gameOver = false;
-            valid.result = true;
         }
         gameState.data = valid;
         return gameState;

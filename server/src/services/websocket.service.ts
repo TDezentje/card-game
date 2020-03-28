@@ -74,7 +74,6 @@ export class WebsocketService {
 
                 if (turn.action === "play") {
                     const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);       
-                    console.log(result); 
                     for (const player of result.players) {
                         self.sendMessageToPlayer(player.guid, {
                             action: result.data.gameOver ? "gameover": "played",
@@ -112,11 +111,11 @@ export class WebsocketService {
                 }
             });
 
-            ws.on('close', function (data) {
+            ws.on('close', function () {
                 self.gameService.leaveGame(this.playerGuid);
                 self.broadcastMessage({
                     action: 'player-left',
-                    guid: result.data.guid
+                    guid: this.playerGuid
                 });
             });
         });
