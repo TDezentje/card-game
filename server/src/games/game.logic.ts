@@ -6,4 +6,5 @@ export abstract class GameLogic {
     public game: Game;
 
     public abstract isValidCard(cardGuid: string, cardsOnStack: Card[], cardsToUse: Card[]);
+    public abstract nextLevel(game: Game);
 }

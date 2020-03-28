@@ -6,6 +6,8 @@ export class Card {
 
     public positionX?: number;
     public positionY?: number;
+    public adjustmentX?: number;
+    public adjustmentY?: number;
     public degrees?: number;
     public rotationY?: number;
     public originX?: number;
@@ -13,6 +15,8 @@ export class Card {
 
     public futurePositionX?: number;
     public futurePositionY?: number;
+    public futureAdjustmentX?: number;
+    public futureAdjustmentY?: number;
     public futureDegrees?: number;
     public futureRotationY?: number;
     public futureOriginX?: number;
@@ -28,5 +32,5 @@ export class CardCorner {
     public rightBottom: string;
 }
 
-export const CARD_WIDTH = 140;
-export const CARD_HEIGHT = 190;
+export const CARD_WIDTH = 110;
+export const CARD_HEIGHT = 150;

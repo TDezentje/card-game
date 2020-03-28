@@ -5,12 +5,12 @@ export class Table {
     public radius: number;
 
     public tick(screenSize: ScreenSize) {
-        if (screenSize.width * .8 < screenSize.height * .8) {
-            this.size = '80vw';
-            this.radius = screenSize.width * .8 / 2;
+        if (screenSize.width * .9 < screenSize.height * .9) {
+            this.size = '90vw';
+            this.radius = screenSize.width * .9 / 2;
         } else {
-            this.size = '80vh';
-            this.radius = screenSize.height * .8 / 2;
+            this.size = '90vh';
+            this.radius = screenSize.height * .9 / 2;
         }
     }
 }

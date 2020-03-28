@@ -7,7 +7,8 @@ import { Card } from './models/card.model';
 export enum GameStatus {
     started,
     running,
-    gameover
+    gameover,
+    finished
 }
 
 export class GameState {
@@ -51,7 +52,7 @@ export class GameState {
         for (const [index, player] of this.players.entries()) {
             let relativeIndex = index - indexOfMe;
             if (relativeIndex < 0) {
-                relativeIndex = this.players.length - relativeIndex;
+                relativeIndex = this.players.length + relativeIndex;
             }
             player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length);
         }
@@ -70,6 +71,12 @@ export class GameState {
     public startGame() {
         this.websocket.send(JSON.stringify({
             action: 'start'
+        }));
+    }
+
+    public nextGame() {
+        this.websocket.send(JSON.stringify({
+            action: 'next-game'
         }));
     }
 
@@ -95,6 +102,9 @@ export class GameState {
             case 'gameover':
                 this.handleGameOver();
                 break;
+            case 'finished':
+                this.handleFinished();
+                break;
         }
     }
 
@@ -117,6 +127,7 @@ export class GameState {
         if (data.isStarted) {
             this.status = GameStatus.running;
             this.players = data.players.map(p => new Player(p));
+            this.pile.cards = [];        
         }
     }
 
@@ -131,6 +142,12 @@ export class GameState {
     }
 
     public handleGameOver() {
-        this.status = GameStatus.gameover;
+        setTimeout(() => {
+            this.status = GameStatus.gameover;
+        }, 1000);
+    }
+
+    public handleFinished() {
+        this.status = GameStatus.finished;
     }
 }

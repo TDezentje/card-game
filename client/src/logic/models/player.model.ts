@@ -31,7 +31,6 @@ export class Player {
         }
 
         const radians = this.degrees * Math.PI/180;
-
         this.positionX = (screenSize.width/2) + (table.radius * Math.cos(radians));
         this.positionY = (screenSize.height/2) + (table.radius * Math.sin(radians));
 
@@ -48,7 +47,6 @@ export class Player {
         }
 
         if (index === 0) {
-            this.positionY += 10;
             for (const [index, card] of this.cards.entries()) {
                 card.rotationY = 0;
                 card.originX = CARD_WIDTH / 2;
@@ -56,7 +54,9 @@ export class Player {
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
                 card.degrees = htmlDegrees + (4 * distanceFromCenter);
                 card.positionX = (cardPositionX - 70) + (80 * distanceFromCenter);
-                card.positionY = cardPositionY - 240 + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
+                card.positionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
+                card.adjustmentX = 0;
+                card.adjustmentY = 0;
             }
         } else {
             for (const [index, card] of this.cards.entries()) {
@@ -64,9 +64,11 @@ export class Player {
                 card.originX = CARD_WIDTH / 2;
                 card.originY = CARD_HEIGHT;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
-                card.degrees = htmlDegrees + (13 * distanceFromCenter);
+                card.degrees = htmlDegrees + (15 * distanceFromCenter);
                 card.positionX = cardPositionX - (CARD_WIDTH / 2);
                 card.positionY = cardPositionY - CARD_HEIGHT;
+                card.adjustmentX = 0;
+                card.adjustmentY = 0;
             }
         }
     }

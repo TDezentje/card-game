@@ -14,6 +14,11 @@ export function GameElement({
         gameState.startGame();
     }, [gameState]);
 
+    const onNextGameClick = useCallback((event) => {
+        event.preventDefault();
+        gameState.nextGame();
+    }, [gameState]);
+
     return <div class={css.gameContainer}>
         <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}} />
 
@@ -28,17 +33,27 @@ export function GameElement({
         }
 
         {
-            gameState.players.map(p => <p class={css.nameTag} style={{background: p.color, transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
+            gameState.players.filter(p => p.guid !== gameState.myPlayerGuid).map(p => <p class={css.nameTag} style={{background: p.color, transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
                 {p.name}
             </p>)
         }
 
         {
-            gameState.status === GameStatus.started && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>Start</button> : null
+            gameState.status === GameStatus.started && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
         }   
 
         {
-            gameState.status === GameStatus.gameover ?  <div class={css.overlay}><span class={css.gameover}>Game over</span></div> : null
-        }   
+            gameState.status === GameStatus.gameover ?  <div class={css.overlay}>
+                <span class={css.title}>GAME OVER!</span>
+                {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Opnieuw</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+            </div> : null
+        }  
+
+        {
+            gameState.status === GameStatus.finished ?  <div class={css.overlay}>
+                <span class={css.title}>HOERA!</span>
+                {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende level</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+            </div> : null
+        }    
     </div>;
 }

@@ -43,6 +43,30 @@ export class GameService {
         return gameState;
     }
 
+    public resetGame(playerGuid: string): GameState{
+        const player = this.playerService.getPlayer(playerGuid);
+        const gameState = new GameState();
+        if (player.isAdmin) {
+            const room = this.getRoomByPlayerGuid(playerGuid);
+            if(room.game.hasNextLevel){
+                this.games.find(g => g.id === room.game.name).nextLevel(room.game);
+            } else {
+                const game = this.getRandomGame();
+                room.game = game;
+                this.activeGameInRooms[room.guid] = game;
+            }
+            this.roomService.startRoom(room.guid);
+            gameState.action = "start";
+            gameState.isStarted = true;
+            gameState.players = room.players;
+
+            for (const player of room.players) {
+                this.getNewCardsInHand(room.guid, player);
+            }
+        }
+        return gameState;
+    }
+
     public stopGame(playerGuid: string): GameState {
         const player = this.playerService.getPlayer(playerGuid);
         const gameState = new GameState();

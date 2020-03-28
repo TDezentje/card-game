@@ -22,7 +22,9 @@ export class WebsocketService {
 
             if (result.players.length > 1) {
                 result.action = "player-joined";
-                this.broadcastMessage(result, ws.playerGuid);
+                for (const player of result.players.filter(p => p.guid !== ws.playerGuid)) {
+                    this.sendMessageToPlayer(player.guid, result);
+                }
             }
 
             // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -68,7 +70,25 @@ export class WebsocketService {
                         result.action = "player-joined";
                         result.data.cards = result.data.cards.map(() => new Card());
 
-                        self.broadcastMessage(result);
+                        for (const player of result.players.filter(p => p.guid !== ws.playerGuid)) {
+                            self.sendMessageToPlayer(player.guid, result);
+                        }
+                    }
+                }
+
+                if (turn.action === "next-game") {
+                    const result = self.gameService.resetGame(this.playerGuid);
+                    for (const player of result.players) {
+                        self.sendMessageToPlayer(player.guid, {
+                            action: "start",
+                            isStarted: true,
+                            players: JSON.parse(JSON.stringify(result.players)).map(p => {
+                                if (p.guid !== player.guid) {
+                                    p.cards = p.cards.map(c => ({ guid: c.guid }));
+                                }
+                                return p;
+                            })
+                        });
                     }
                 }
 
@@ -76,7 +96,7 @@ export class WebsocketService {
                     const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);
                     for (const player of result.players) {
                         self.sendMessageToPlayer(player.guid, {
-                            action: result.data.gameOver ? "gameover" : "played",
+                            action: "played",
                             isStarted: !result.data.gameOver,
                             data: {
                                 playerGuid: this.playerGuid,
@@ -84,6 +104,18 @@ export class WebsocketService {
                                 card: result.data.card
                             }
                         });
+
+                        if(result.data.gameOver){
+                            self.sendMessageToPlayer(player.guid, {
+                                action: "gameover",
+                                isStarted: !result.data.gameOver,
+                                data: {
+                                    playerGuid: this.playerGuid,
+                                    cardGuid: turn.cardGuid,
+                                    card: result.data.card
+                                }
+                            });
+                        }
                         if (result.players.every(p => p.cards.length === 0)) {
                             self.sendMessageToPlayer(player.guid, {
                                 action: "finished"
@@ -96,10 +128,12 @@ export class WebsocketService {
 
             ws.on('close', function () {
                 self.gameService.leaveGame(this.playerGuid);
-                self.broadcastMessage({
-                    action: 'player-left',
-                    guid: this.playerGuid
-                });
+                for (const player of result.players.filter(p => p.guid !== ws.playerGuid)) {
+                    self.sendMessageToPlayer(player.guid, {
+                        action: 'player-left',
+                        guid: this.playerGuid
+                    });
+                }
             });
         });
 
@@ -122,14 +156,6 @@ export class WebsocketService {
         //     clearInterval(interval);
         //     clearInterval(cleanUpInterval);
         // });
-    }
-
-    private broadcastMessage(message, playerGuid?: string) {
-        this.wssGame.clients.forEach(function each(client) {
-            if (client.readyState === WebSocket.OPEN && (!playerGuid || playerGuid !== client.playerGuid)) {
-                client.send(JSON.stringify(message));
-            }
-        });
     }
 
     private sendMessageToPlayer(playerGuid: string, message) {

@@ -19,7 +19,9 @@ export class CardPile {
 
             card.positionX = getTweenValue(card.positionX, card.futurePositionX, deltaT, 6);
             card.positionY = getTweenValue(card.positionY, card.futurePositionY, deltaT, 6);
-            
+            card.adjustmentX = getTweenValue(card.adjustmentX, card.futureAdjustmentX, deltaT, 6);
+            card.adjustmentY = getTweenValue(card.adjustmentY, card.futureAdjustmentY, deltaT, 6);
+
             card.rotationY = getTweenValue(card.rotationY, card.futureRotationY, deltaT, 5);
             card.originX = getTweenValue(card.originX, card.futureOriginX, deltaT, 5);
             card.originY = getTweenValue(card.originY, card.futureOriginY, deltaT, 5);
@@ -30,8 +32,10 @@ export class CardPile {
     public addCard(card: Card) {
         this.cards.push(card);
         card.futureRotationY = 0;
-        card.futureOriginX = CARD_WIDTH / 2;
-        card.futureOriginY = CARD_HEIGHT / 2;
-        card.futureDegrees = card.degrees + (45 - (Math.random() * 90));
+        card.futureOriginX = (CARD_WIDTH / 2) + (10 - (Math.random() * 20));
+        card.futureOriginY = (CARD_HEIGHT / 2) + (10 - (Math.random() * 20));
+        card.futureAdjustmentX = (40 - (Math.random() * 80));
+        card.futureAdjustmentY = (40 - (Math.random() * 80));
+        card.futureDegrees = card.degrees + (55 - (Math.random() * 110));
     }
 }

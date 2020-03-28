@@ -6,7 +6,12 @@ export class TheMind extends GameLogic {
     public isValidCard(cardGuid: string, cardsOnStack: Card[], cardsToUse: Card[]) {
         const cardsInCurrentGame = this.game.cards.filter(c => !cardsToUse.some(ctu => ctu.guid == c.guid));
         const nextCard = cardsInCurrentGame.find(c => !cardsOnStack.some(ctu => ctu.guid === c.guid));
-        return nextCard.guid === cardGuid;
+        return nextCard.guid == cardGuid;
+    }
+
+    public nextLevel (game) {
+        game.level += 1;
+        game.numberOfCardsInHand += 1;
     }
 
     public game: Game =
@@ -17,6 +22,7 @@ export class TheMind extends GameLogic {
             "maxPlayer": null,
             "numberOfCardsInHand": 5,
             "allowInvalidMoves": false,
+            "hasNextLevel": true,
             "cards": [
                 {
                     "guid": "6ebc1ede-beb5-4be9-ad01-769862f29c80",
@@ -1022,4 +1028,5 @@ export class TheMind extends GameLogic {
         }
 
     public id = this.game.name;
+    public level = 1;
 }

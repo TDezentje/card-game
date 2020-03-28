@@ -7,7 +7,10 @@ export class Game {
     numberOfCardsInHand?: number;
     maxPlayer?: number;
     allowInvalidMoves: boolean;
+    hasNextLevel: boolean;
     cards: Card[];
     cardsToUse?: Card[];
     cardsOnStack?: Card[];
+    
+    level?: number;
 }
