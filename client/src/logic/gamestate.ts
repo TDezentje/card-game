@@ -134,6 +134,11 @@ export class GameState {
     public handlePlay(data) {
         const player = this.players.find(p => p.guid === data.data.playerGuid);
         const cardIndex = player.cards.findIndex(c => c.guid === data.data.cardGuid);
+
+        if (cardIndex === -1) {
+            return;
+        }
+
         const card = player.cards[cardIndex];
         card.corner = data.data.card.corner;
         card.display = data.data.card.display;

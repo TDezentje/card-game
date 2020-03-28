@@ -48,7 +48,7 @@ export class GameService {
         const gameState = new GameState();
         if (player.isAdmin) {
             const room = this.getRoomByPlayerGuid(playerGuid);
-            if(room.game.hasNextLevel){
+            if(room.game.hasNextLevel && !room.game.gameOver){
                 this.games.find(g => g.id === room.game.name).nextLevel(room.game);
             } else {
                 const game = this.getRandomGame();
@@ -114,7 +114,7 @@ export class GameService {
 
     public getRandomGame() {
         const idx = Math.floor(Math.random() * Math.floor(this.games.length));
-        return this.games[idx].game;
+        return JSON.parse(JSON.stringify(this.games[idx].game));
     }
 
     public getNewCardsInHand(roomGuid: string, player: Player) {
@@ -147,6 +147,8 @@ export class GameService {
             valid.gameOver =  !game.allowInvalidMoves;
             valid.result = false;
         }
+        room.game.gameOver = valid.gameOver;
+        game.gameOver = valid.gameOver;
         game.cardsOnStack.push(card);
         gameState.data = valid;
         return gameState;

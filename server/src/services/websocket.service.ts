@@ -136,26 +136,6 @@ export class WebsocketService {
                 }
             });
         });
-
-        // const cleanUpInterval = setInterval(() => {
-        //     this.gameService.cleanUpInActiveUsers(Array.from(this.wssGame.clients));
-        // }, 30000);
-
-        // const interval = setInterval(() => {
-        //     this.wssGame.clients.forEach((ws) => {
-        //         if (ws.isAlive === false) {
-        //             return ws.terminate();
-        //         }
-
-        //         ws.isAlive = false;
-        //         ws.ping();
-        //     });
-        // }, 5000);
-
-        // this.wssGame.on('close', () => {
-        //     clearInterval(interval);
-        //     clearInterval(cleanUpInterval);
-        // });
     }
 
     private sendMessageToPlayer(playerGuid: string, message) {

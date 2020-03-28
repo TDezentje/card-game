@@ -19,8 +19,17 @@ export function GameElement({
         gameState.nextGame();
     }, [gameState]);
 
+    const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
+    
     return <div class={css.gameContainer}>
         <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}} />
+
+        {
+            me && <div class={css.hud} style={{ borderColor: me.color }}>
+                <div style={{backgroundColor: me.color }} class={css.name}>{me.name}</div>
+            </div>
+        }
+        
 
         {
             gameState.pile.cards.map(c => <CardElement gameState={gameState} card={c} />)
@@ -54,6 +63,6 @@ export function GameElement({
                 <span class={css.title}>HOERA!</span>
                 {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende level</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
             </div> : null
-        }    
+        }
     </div>;
 }

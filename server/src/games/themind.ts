@@ -12,6 +12,12 @@ export class TheMind extends GameLogic {
     public nextLevel (game) {
         game.level += 1;
         game.numberOfCardsInHand += 1;
+        this.resetGame(game);
+    }
+
+    public resetGame(game){
+        game.cardsToUse = JSON.parse(JSON.stringify(game.cards));
+        game.cardsOnStack = [];
     }
 
     public game: Game =

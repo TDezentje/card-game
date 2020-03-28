@@ -13,4 +13,5 @@ export class Game {
     cardsOnStack?: Card[];
     
     level?: number;
+    gameOver?: boolean;
 }

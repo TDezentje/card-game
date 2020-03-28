@@ -93,3 +93,19 @@
         opacity: 1;
     }
 }
+
+.hud {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-bottom: 6px solid;
+    display: flex;
+    flex-direction: row;
+
+    .name {
+        color: white;
+        padding: 12px;
+        border-top-right-radius: 6px;
+    }
+}
