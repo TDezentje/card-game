@@ -1,7 +1,15 @@
 import { Game } from 'models/game.model';
+import { Card } from 'models/card.model';
+import { GameLogic } from './game.logic';
 
-export class TheMind {
-    public static game: Game =
+export class TheMind extends GameLogic {
+    public isValidCard(cardGuid: string, cardsOnStack: Card[], cardsToUse: Card[]) {
+        const cardsInCurrentGame = this.game.cards.filter(c => !cardsToUse.some(ctu => ctu.guid == c.guid));
+        const nextCard = cardsInCurrentGame.find(c => !cardsOnStack.some(ctu => ctu.guid === c.guid));
+        return nextCard.guid === cardGuid;
+    }
+
+    public game: Game =
         {
             "name": "The mind",
             "turnBased": false,
@@ -9,12 +17,6 @@ export class TheMind {
             "maxPlayer": null,
             "numberOfCardsInHand": 5,
             "allowInvalidMoves": false,
-                "rules": [
-                    {
-                        "property": "display",
-                        "operation": "bigger"
-                    }
-                ],
             "cards": [
                 {
                     "guid": "6ebc1ede-beb5-4be9-ad01-769862f29c80",
@@ -1018,4 +1020,6 @@ export class TheMind {
                 }
             ]
         }
+
+    public id = this.game.name;
 }

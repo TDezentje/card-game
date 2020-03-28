@@ -19,12 +19,12 @@ export class WebsocketService {
             ws.playerGuid = result.data.guid;
             ws.on('pong', () => ws.isAlive = true);
             ws.send(JSON.stringify(result));
-            
-            if(result.players.length > 1){
+
+            if (result.players.length > 1) {
                 result.action = "player-joined";
                 this.broadcastMessage(result, ws.playerGuid);
             }
-            
+
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const self = this;
             ws.on('message', function (data) {
@@ -42,7 +42,7 @@ export class WebsocketService {
 
                 if (turn.action === "start") {
                     const result = self.gameService.startGame(this.playerGuid);
-                    
+
                     if (result.isStarted) {
                         for (const player of result.players) {
                             self.sendMessageToPlayer(player.guid, {
@@ -50,12 +50,12 @@ export class WebsocketService {
                                 isStarted: true,
                                 players: JSON.parse(JSON.stringify(result.players)).map(p => {
                                     if (p.guid !== player.guid) {
-                                        p.cards = p.cards.map(c => ({guid: c.guid}));
+                                        p.cards = p.cards.map(c => ({ guid: c.guid }));
                                     }
                                     return p;
                                 })
                             });
-                        }                
+                        }
                     } else {
                         this.send(JSON.stringify(result));
                     }
@@ -64,19 +64,19 @@ export class WebsocketService {
                 if (turn.action === "join") {
                     const result = self.gameService.joinGame();
                     this.send(JSON.stringify(result));
-                    if(result.players.length > 1){
+                    if (result.players.length > 1) {
                         result.action = "player-joined";
                         result.data.cards = result.data.cards.map(() => new Card());
-                        
+
                         self.broadcastMessage(result);
                     }
                 }
 
                 if (turn.action === "play") {
-                    const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);       
+                    const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);
                     for (const player of result.players) {
                         self.sendMessageToPlayer(player.guid, {
-                            action: result.data.gameOver ? "gameover": "played",
+                            action: result.data.gameOver ? "gameover" : "played",
                             isStarted: !result.data.gameOver,
                             data: {
                                 playerGuid: this.playerGuid,
@@ -84,6 +84,12 @@ export class WebsocketService {
                                 card: result.data.card
                             }
                         });
+                        if (result.players.every(p => p.cards.length === 0)) {
+                            self.sendMessageToPlayer(player.guid, {
+                                action: "finished"
+                            });
+                        }
+
                     }
                 }
             });

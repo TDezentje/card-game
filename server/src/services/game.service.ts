@@ -4,18 +4,19 @@ import { Player } from 'models/player.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
 import { GameState } from 'models/game-state.model';
+import { GameLogic } from 'games/game.logic';
 
 export class GameService {
     private activeGameInRooms: { [roomId: string]: Game } = {};
-    private games: Game[] = [];
+    private games: GameLogic[] = [];
     private playerService: PlayerService = new PlayerService();
     private roomService: RoomService = new RoomService();
 
     public loadGames() {
         this.games = [];
-        const theMind = TheMind.game;
-        theMind.cardsToUse = JSON.parse(JSON.stringify(theMind.cards));
-        theMind.cardsOnStack = [];
+        const theMind = new TheMind();
+        theMind.game.cardsToUse = JSON.parse(JSON.stringify(theMind.game.cards));
+        theMind.game.cardsOnStack = [];
         this.games.push(theMind);
     }
 
@@ -89,7 +90,7 @@ export class GameService {
 
     public getRandomGame() {
         const idx = Math.floor(Math.random() * Math.floor(this.games.length));
-        return this.games[idx];
+        return this.games[idx].game;
     }
 
     public getNewCardsInHand(roomGuid: string, player: Player) {
@@ -118,33 +119,13 @@ export class GameService {
         const gameState = new GameState();
         gameState.players = room.players;
         gameState.action = "play";
-        if (!this.isValidMove(room.guid, cardGuid)) {
+        if (!this.games.find(g => g.id === game.name).isValidCard(cardGuid, game.cardsOnStack, game.cardsToUse)) {
             valid.gameOver =  !game.allowInvalidMoves;
             valid.result = false;
         }
+        game.cardsOnStack.push(card);
         gameState.data = valid;
         return gameState;
-    }
-
-    private isValidMove(roomGuid: string, cardGuid: string): boolean {
-        const activeGameInRoom = this.getGameInRoom(roomGuid);
-        const lastCardIdx = activeGameInRoom.cardsOnStack.length - 1;
-        let lastPlayedCard;
-        if (lastCardIdx >= 0) {
-            lastPlayedCard = activeGameInRoom.cardsOnStack[lastCardIdx];
-        }
-        const card = activeGameInRoom.cards.find(c => c.guid === cardGuid);
-        let isValid = true;
-        for (const rule of activeGameInRoom.rules) {
-            if (rule.operation === "bigger") {
-                if (lastPlayedCard && lastPlayedCard[rule.property] >= card[rule.property]) {
-                    isValid = false;                    
-                    break;
-                }
-            }
-        }
-        activeGameInRoom.cardsOnStack.push(card);
-        return isValid;
     }
 
     public getRoomByPlayerGuid(playerGuid: string) {

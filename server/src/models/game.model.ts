@@ -1,5 +1,4 @@
 import { Card } from './card.model';
-import { Rule } from './rule.model';
 
 export class Game {
     name: string;
@@ -8,7 +7,6 @@ export class Game {
     numberOfCardsInHand?: number;
     maxPlayer?: number;
     allowInvalidMoves: boolean;
-    rules: Rule[];
     cards: Card[];
     cardsToUse?: Card[];
     cardsOnStack?: Card[];
