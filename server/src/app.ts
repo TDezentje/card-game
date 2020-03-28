@@ -5,6 +5,7 @@ const app = express();
 const path = require('path');
 
 import { staticFiles } from './routes/static-files';
+import { WebsocketService } from 'services/websocket.service';
 
 app.use('/assets', staticFiles);
 app.get('/*', (req, res) => {
@@ -22,9 +23,12 @@ app.listen(PORT, () => {
         const sessionId = uuid();
         const WebSocket = require('ws');
         const wss = new WebSocket.Server({ port: 8081 });
-  
+
         wss.on('connection', ws => {
             ws.send(sessionId);
         });
     }
+
+    const webServer = new WebsocketService();
+    webServer.createWebserver();
 });

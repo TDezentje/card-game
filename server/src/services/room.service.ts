@@ -13,13 +13,17 @@ export class RoomService {
         this.rooms[newRoom.guid] = newRoom;
         return newRoom;
     }
+
+    public getRooms(): { [id: string]: Room } {
+        return this.rooms;
+    }
+
     public deleteRoom(roomGuid: string) {
         this.rooms[roomGuid] = null;
     }
 
     public addUserToRoom(roomGuid: string, player: Player) {
         this.rooms[roomGuid].players.push(player);
-
     }
 
     public deleteUserFromRoom(roomGuid: string, player: Player) {
