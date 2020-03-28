@@ -18,9 +18,9 @@ export function CardElement({
         gameState.playCard(card);
     }, [card]);
 
-    return <div class={`${css.cardContainer} ${isMine ? css.clickable : ''}`} onClick={isMine ? onClick : null} style={{transform: `translate(${card.positionX}px, ${card.positionY}px) rotate(${card.degrees || '0'}deg)`}}>
+    return <div class={`${css.cardContainer} ${isMine ? css.clickable : ''}`} onClick={isMine ? onClick : null} style={{transformOrigin: `${card.originX}px ${card.originY}px`, transform: `translate(${card.positionX}px, ${card.positionY}px) rotate(${card.degrees || '0'}deg)`}}>
         <div class={css.scaler}>
-            <div class={`${css.card} ${isMine ? css.clickable : ''}`} style={{transform: `rotateY(${card.rotationY}deg)`}}>
+            <div class={`${css.card} ${isMine ? css.clickable : ''}`} style={{transform: `rotateX(${card.rotationY}deg)`}}>
                 <div class={`${css.front} ${css.face}`}>
                     <span class={css.topLeft}>{card.corner?.leftTop}</span>
                     <span class={css.topRight}>{card.corner?.rightTop}</span>

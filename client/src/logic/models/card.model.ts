@@ -8,6 +8,17 @@ export class Card {
     public positionY?: number;
     public degrees?: number;
     public rotationY?: number;
+    public originX?: number;
+    public originY?: number;
+
+    public futurePositionX?: number;
+    public futurePositionY?: number;
+    public futureDegrees?: number;
+    public futureRotationY?: number;
+    public futureOriginX?: number;
+    public futureOriginY?: number;
+
+    public lastPositionChange?: number;
 }
 
 export class CardCorner {

@@ -1,5 +1,6 @@
 import { Card, CARD_WIDTH, CARD_HEIGHT } from './card.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
+import { getTweenValue } from 'logic/helpers/animation.helper';
 
 export class CardPile {
     public cards: Card[];
@@ -8,15 +9,29 @@ export class CardPile {
         this.cards = [];
     }
 
-    public tick(screenSize: ScreenSize) {
+    public tick(deltaT, screenSize: ScreenSize) {
         const centerX = screenSize.width / 2;
         const centerY = screenSize.height / 2;
 
         for (const card of this.cards) {
-            card.rotationY = 0;
-            card.degrees = 0;
-            card.positionX = centerX - (CARD_WIDTH / 2);
-            card.positionY = centerY - (CARD_HEIGHT / 2);
+            card.futurePositionX = centerX - (CARD_WIDTH / 2);
+            card.futurePositionY = centerY - (CARD_HEIGHT / 2);
+
+            card.positionX = getTweenValue(card.positionX, card.futurePositionX, deltaT, 6);
+            card.positionY = getTweenValue(card.positionY, card.futurePositionY, deltaT, 6);
+            
+            card.rotationY = getTweenValue(card.rotationY, card.futureRotationY, deltaT, 5);
+            card.originX = getTweenValue(card.originX, card.futureOriginX, deltaT, 5);
+            card.originY = getTweenValue(card.originY, card.futureOriginY, deltaT, 5);
+            card.degrees = getTweenValue(card.degrees, card.futureDegrees, deltaT, 5);
         }
+    }
+
+    public addCard(card: Card) {
+        this.cards.push(card);
+        card.futureRotationY = 0;
+        card.futureOriginX = CARD_WIDTH / 2;
+        card.futureOriginY = CARD_HEIGHT / 2;
+        card.futureDegrees = card.degrees + (45 - (Math.random() * 90));
     }
 }

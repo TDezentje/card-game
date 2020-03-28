@@ -23,6 +23,8 @@ export class GameState {
     public websocket = new WebSocket("ws://" + location.hostname + ':8001');
     public afterTick: () => void;
 
+    private lastTick = 0;
+
     public constructor() {
         this.tick = this.tick.bind(this);
         this.players = [];
@@ -33,14 +35,17 @@ export class GameState {
         this.websocket.onmessage = this.onWebsocketMessage.bind(this);
     }
 
-    public tick() {
+    public tick(time: number) {
+        const deltaT = time - this.lastTick;
+        this.lastTick = time;
+
         const screenSize = {
             width: document.body.clientWidth,
             height: document.body.clientHeight
         };
         
         this.table.tick(screenSize);
-        this.pile.tick(screenSize);
+        this.pile.tick(deltaT, screenSize);
 
         const indexOfMe = this.players.findIndex(p => p.guid === this.myPlayerGuid);
         for (const [index, player] of this.players.entries()) {
@@ -122,7 +127,7 @@ export class GameState {
         card.corner = data.data.card.corner;
         card.display = data.data.card.display;
         player.cards.splice(cardIndex, 1);
-        this.pile.cards.push(card);
+        this.pile.addCard(card);
     }
 
     public handleGameOver() {

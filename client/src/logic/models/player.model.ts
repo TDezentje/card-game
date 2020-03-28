@@ -40,6 +40,8 @@ export class Player {
             this.positionY += 10;
             for (const [index, card] of this.cards.entries()) {
                 card.rotationY = 0;
+                card.originX = CARD_WIDTH / 2;
+                card.originY = CARD_HEIGHT;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
                 card.degrees = htmlDegrees + (4 * distanceFromCenter);
                 card.positionX = (cardPositionX - 70) + (80 * distanceFromCenter);
@@ -48,6 +50,8 @@ export class Player {
         } else {
             for (const [index, card] of this.cards.entries()) {
                 card.rotationY = 180;
+                card.originX = CARD_WIDTH / 2;
+                card.originY = CARD_HEIGHT;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
                 card.degrees = htmlDegrees + (13 * distanceFromCenter);
                 card.positionX = cardPositionX - (CARD_WIDTH / 2);
