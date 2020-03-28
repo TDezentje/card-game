@@ -34,8 +34,4 @@ export class PlayerService {
     public getPlayer(playerGuid: string) {
         return this.players.find(p => p.guid === playerGuid);
     }
-
-    public getPlayers() {
-        return this.players;
-    }
 }

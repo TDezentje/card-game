@@ -8,10 +8,15 @@
     transform-origin: bottom center;
     cursor: default;
     user-select: none;
-    
+    transition: opacity .5s cubic-bezier(0.4, 0.0, 0.2, 1);
+
     &.clickable {
         z-index: 1;
         cursor: pointer;
+    }
+
+    &.cleanup {
+        opacity: 0;
     }
 }
 
@@ -73,7 +78,7 @@
 .middle {
     position: absolute;
     font-weight: bold;
-    color: 323232;
+    color: #323232;
     font-size: .9rem;
 }
 

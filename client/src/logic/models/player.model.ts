@@ -18,6 +18,7 @@ export class Player {
 
     public constructor(obj) {
         Object.assign(this, obj);
+        this.cards = [];
     }
 
     public tick(deltaT: number, screenSize: ScreenSize, table: Table, index: number, playerCount: number) {
@@ -48,28 +49,39 @@ export class Player {
 
         if (index === 0) {
             for (const [index, card] of this.cards.entries()) {
-                card.rotationY = 0;
-                card.originX = CARD_WIDTH / 2;
-                card.originY = CARD_HEIGHT;
+                card.futureRotationY = 0;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
-                card.degrees = htmlDegrees + (4 * distanceFromCenter);
-                card.positionX = (cardPositionX - 70) + (80 * distanceFromCenter);
-                card.positionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
-                card.adjustmentX = 0;
-                card.adjustmentY = 0;
+                card.futureDegrees = htmlDegrees + (4 * distanceFromCenter);
+                card.futurePositionX = (cardPositionX - 70) + (80 * distanceFromCenter);
+                card.futurePositionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
+                this.calculateTweens(card, deltaT);
             }
         } else {
             for (const [index, card] of this.cards.entries()) {
-                card.rotationY = 180;
-                card.originX = CARD_WIDTH / 2;
-                card.originY = CARD_HEIGHT;
+                card.futureRotationY = 180;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
-                card.degrees = htmlDegrees + (15 * distanceFromCenter);
-                card.positionX = cardPositionX - (CARD_WIDTH / 2);
-                card.positionY = cardPositionY - CARD_HEIGHT;
-                card.adjustmentX = 0;
-                card.adjustmentY = 0;
+                card.futureDegrees = htmlDegrees + (15 * distanceFromCenter);
+                card.futurePositionX = cardPositionX - (CARD_WIDTH / 2);
+                card.futurePositionY = cardPositionY - CARD_HEIGHT;
+                this.calculateTweens(card, deltaT);
             }
         }
+    }
+
+    private calculateTweens(card, deltaT) {
+        card.futureOriginX = CARD_WIDTH / 2;
+        card.futureOriginY = CARD_HEIGHT;
+        card.futureAdjustmentX = 0;
+        card.futureAdjustmentY = 0;
+
+        card.positionX = getTweenValue(card.positionX, card.futurePositionX, deltaT, 6);
+        card.positionY = getTweenValue(card.positionY, card.futurePositionY, deltaT, 6);
+        card.adjustmentX = getTweenValue(card.adjustmentX, card.futureAdjustmentX, deltaT, 6);
+        card.adjustmentY = getTweenValue(card.adjustmentY, card.futureAdjustmentY, deltaT, 6);
+
+        card.rotationY = getTweenValue(card.rotationY, card.futureRotationY, deltaT, 5);
+        card.originX = getTweenValue(card.originX, card.futureOriginX, deltaT, 5);
+        card.originY = getTweenValue(card.originY, card.futureOriginY, deltaT, 5);
+        card.degrees = getTweenValue(card.degrees, card.futureDegrees, deltaT, 5);
     }
 }

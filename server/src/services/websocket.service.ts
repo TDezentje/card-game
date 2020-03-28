@@ -94,34 +94,39 @@ export class WebsocketService {
 
                 if (turn.action === "play") {
                     const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);
-                    for (const player of result.players) {
-                        self.sendMessageToPlayer(player.guid, {
-                            action: "played",
-                            isStarted: !result.data.gameOver,
-                            data: {
-                                playerGuid: this.playerGuid,
-                                cardGuid: turn.cardGuid,
-                                card: result.data.card
-                            }
-                        });
-
-                        if(result.data.gameOver){
+                    if(result !== null){
+                        for (const player of result.players) {
                             self.sendMessageToPlayer(player.guid, {
-                                action: "gameover",
+                                action: "played",
                                 isStarted: !result.data.gameOver,
                                 data: {
                                     playerGuid: this.playerGuid,
                                     cardGuid: turn.cardGuid,
-                                    card: result.data.card
+                                    card: result.data.card,
+                                    nextPlayerGuid: result.nextPlayer && result.nextPlayer.guid,
+                                    result: result.data.result
                                 }
                             });
-                        }
-                        if (result.players.every(p => p.cards.length === 0)) {
-                            self.sendMessageToPlayer(player.guid, {
-                                action: "finished"
-                            });
-                        }
 
+                            if(result.data.gameOver){
+                                self.sendMessageToPlayer(player.guid, {
+                                    action: "gameover",
+                                    isStarted: !result.data.gameOver,
+                                    data: {
+                                        playerGuid: this.playerGuid,
+                                        cardGuid: turn.cardGuid,
+                                        card: result.data.card,
+                                        result: result.data.result
+                                    }
+                                });
+                            }
+                            if (result.players.every(p => p.cards.length === 0)) {
+                                self.sendMessageToPlayer(player.guid, {
+                                    action: "finished"
+                                });
+                            }
+
+                        }
                     }
                 }
             });

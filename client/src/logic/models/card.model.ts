@@ -3,7 +3,8 @@ export class Card {
     public guid: string;
     public display: string;
     public canBeUsed: boolean;
-
+    public color: string;
+    
     public positionX?: number;
     public positionY?: number;
     public adjustmentX?: number;
@@ -21,8 +22,6 @@ export class Card {
     public futureRotationY?: number;
     public futureOriginX?: number;
     public futureOriginY?: number;
-
-    public lastPositionChange?: number;
 }
 
 export class CardCorner {

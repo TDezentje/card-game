@@ -2,6 +2,7 @@ export class Card {
     corner: CardCorner;
     guid: string;
     display: string;
+    color?: string;
     canBeUsed?: boolean;
 }
 

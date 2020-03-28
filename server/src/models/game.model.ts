@@ -1,4 +1,5 @@
 import { Card } from './card.model';
+import { Player } from './player.model';
 
 export class Game {
     name: string;
@@ -14,4 +15,5 @@ export class Game {
     
     level?: number;
     gameOver?: boolean;
+    currentPlayer?: Player;
 }

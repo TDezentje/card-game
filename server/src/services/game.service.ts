@@ -1,5 +1,6 @@
 import { Game } from 'models/game.model';
 import { TheMind } from 'games/themind';
+import { CrazyEights } from 'games/crazyEights';
 import { Player } from 'models/player.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
@@ -18,6 +19,10 @@ export class GameService {
         theMind.game.cardsToUse = JSON.parse(JSON.stringify(theMind.game.cards));
         theMind.game.cardsOnStack = [];
         this.games.push(theMind);
+        // const crazyEights = new CrazyEights();
+        // crazyEights.game.cardsToUse = JSON.parse(JSON.stringify(crazyEights.game.cards));
+        // crazyEights.game.cardsOnStack = [];
+        // this.games.push(crazyEights);
     }
 
     public createGame() {
@@ -147,9 +152,22 @@ export class GameService {
             valid.gameOver =  !game.allowInvalidMoves;
             valid.result = false;
         }
+        // if(game.turnBased){
+        //     let currentPlayerIdx = room.players.length - 1;
+        //     if(game.currentPlayer){
+        //         currentPlayerIdx = room.players.findIndex(p => p.guid === game.currentPlayer.guid);
+        //     }
+        //     currentPlayerIdx++;
+        //     if(currentPlayerIdx === room.players.length){
+        //         currentPlayerIdx = 0;
+        //     }
+        //     gameState.nextPlayer = room.players[currentPlayerIdx];
+        // }
         room.game.gameOver = valid.gameOver;
         game.gameOver = valid.gameOver;
-        game.cardsOnStack.push(card);
+        if (valid.result) {
+            game.cardsOnStack.push(card);
+        }
         gameState.data = valid;
         return gameState;
     }

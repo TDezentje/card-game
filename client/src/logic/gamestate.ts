@@ -3,12 +3,14 @@ import { CardStack } from './models/card-stack.model';
 import { CardPile } from './models/card-pile.model';
 import { Table } from './models/table.model';
 import { Card } from './models/card.model';
+import { sleep } from './helpers/animation.helper';
 
 export enum GameStatus {
     started,
     running,
     gameover,
-    finished
+    finished,
+    cleanup
 }
 
 export class GameState {
@@ -46,6 +48,7 @@ export class GameState {
         };
         
         this.table.tick(screenSize);
+        this.stack.tick(screenSize);
         this.pile.tick(deltaT, screenSize);
 
         const indexOfMe = this.players.findIndex(p => p.guid === this.myPlayerGuid);
@@ -123,15 +126,58 @@ export class GameState {
         this.players.splice(this.players.findIndex(p => p.guid === data.guid), 1);
     }
 
-    private handleStart(data) {
+    private async handleStart(data) {
         if (data.isStarted) {
+            if (this.status !== GameStatus.started) {
+                this.status = GameStatus.cleanup;
+                await sleep(800);
+            }
+
             this.status = GameStatus.running;
-            this.players = data.players.map(p => new Player(p));
             this.pile.cards = [];        
+            this.stack.hasCards = true;
+
+            this.players = data.players.map(p => {
+                p = JSON.parse(JSON.stringify(p));
+                delete p.cards;
+                return new Player(p);
+            });
+            
+            for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
+                for (const p of data.players) {
+                    const promise = sleep(50);
+                    
+                    const card: Card = p.cards[i];
+                    if (!card) {
+                        continue;
+                    }
+                    
+                    card.positionX = this.stack.card.positionX;
+                    card.positionY = this.stack.card.positionY;
+                    card.originX = this.stack.card.originX;
+                    card.originY = this.stack.card.originY;
+                    card.rotationY = this.stack.card.rotationY;
+                    card.degrees = this.stack.card.degrees;
+                    card.adjustmentX = this.stack.card.adjustmentX;
+                    card.adjustmentY = this.stack.card.adjustmentY;
+
+                    card.futureAdjustmentX = 0;
+                    card.futureAdjustmentY = 0;
+
+                    const player = this.players.find(p2 => p.guid === p2.guid);
+                    player.cards.push(card);
+
+                    await promise;
+                };
+            }
         }
     }
 
     public handlePlay(data) {
+        if (!data.data.result) {
+            return;
+        }
+
         const player = this.players.find(p => p.guid === data.data.playerGuid);
         const cardIndex = player.cards.findIndex(c => c.guid === data.data.cardGuid);
 
@@ -142,6 +188,7 @@ export class GameState {
         const card = player.cards[cardIndex];
         card.corner = data.data.card.corner;
         card.display = data.data.card.display;
+        card.color = data.data.card.color;
         player.cards.splice(cardIndex, 1);
         this.pile.addCard(card);
     }

@@ -30,9 +30,12 @@ export function GameElement({
             </div>
         }
         
-
         {
             gameState.pile.cards.map(c => <CardElement gameState={gameState} card={c} />)
+        }   
+
+        {
+            gameState.stack.hasCards ? <CardElement gameState={gameState} card={gameState.stack.card} /> : <div class={css.emptyStack}><span>X</span></div>
         }   
 
         {
@@ -49,7 +52,8 @@ export function GameElement({
 
         {
             gameState.status === GameStatus.started && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
-        }   
+        }
+   
 
         {
             gameState.status === GameStatus.gameover ?  <div class={css.overlay}>
