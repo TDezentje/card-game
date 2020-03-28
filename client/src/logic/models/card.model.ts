@@ -16,3 +16,6 @@ export class CardCorner {
     public rightTop: string;
     public rightBottom: string;
 }
+
+export const CARD_WIDTH = 140;
+export const CARD_HEIGHT = 190;

@@ -1,99 +1,19 @@
-import { Card } from './card.model';
+import { Card, CARD_HEIGHT, CARD_WIDTH } from './card.model';
 import { Table } from './table.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
 
 export class Player {
     public name: string;
     public guid: string;
+    public color: string;
+    public isAdmin: boolean;
     public cards: Card[];
 
     public positionX: number;
     public positionY: number;
 
-    public constructor(guid: string, name: string) {
-        this.guid = guid;
-        this.name = name;
-        this.cards = [{
-            guid: '1',
-            display: 'A',
-            corner: {
-                leftBottom: 'A',
-                rightBottom: 'A',
-                leftTop: 'A',
-                rightTop: 'A',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'B',
-            corner: {
-                leftBottom: 'B',
-                rightBottom: 'B',
-                leftTop: 'B',
-                rightTop: 'B',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'C',
-            corner: {
-                leftBottom: 'C',
-                rightBottom: 'C',
-                leftTop: 'C',
-                rightTop: 'C',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'C',
-            corner: {
-                leftBottom: 'C',
-                rightBottom: 'C',
-                leftTop: 'C',
-                rightTop: 'C',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'C',
-            corner: {
-                leftBottom: 'C',
-                rightBottom: 'C',
-                leftTop: 'C',
-                rightTop: 'C',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'C',
-            corner: {
-                leftBottom: 'C',
-                rightBottom: 'C',
-                leftTop: 'C',
-                rightTop: 'C',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'C',
-            corner: {
-                leftBottom: 'C',
-                rightBottom: 'C',
-                leftTop: 'C',
-                rightTop: 'C',
-            },
-            canBeUsed: true,
-        },{
-            guid: '2',
-            display: 'C',
-            corner: {
-                leftBottom: 'C',
-                rightBottom: 'C',
-                leftTop: 'C',
-                rightTop: 'C',
-            },
-            canBeUsed: true,
-        }];
+    public constructor(obj) {
+        Object.assign(this, obj);
     }
 
     public tick(screenSize: ScreenSize, table: Table, index: number, playerCount: number) {
@@ -110,6 +30,14 @@ export class Player {
 
         if (index === 0) {
             this.positionY += 10;
+        }
+
+        if (!this.cards) {
+            return;
+        }
+
+        if (index === 0) {
+            this.positionY += 10;
             for (const [index, card] of this.cards.entries()) {
                 card.rotationY = 0;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
@@ -122,8 +50,8 @@ export class Player {
                 card.rotationY = 180;
                 const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
                 card.degrees = htmlDegrees + (13 * distanceFromCenter);
-                card.positionX = cardPositionX - 70;
-                card.positionY = cardPositionY - 190;
+                card.positionX = cardPositionX - (CARD_WIDTH / 2);
+                card.positionY = cardPositionY - CARD_HEIGHT;
             }
         }
     }

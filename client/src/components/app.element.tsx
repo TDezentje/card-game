@@ -6,12 +6,12 @@ require('./app.element.scss');
 
 export class App extends Component {
     public currentGame = new GameState();
-
-    public componentDidMount() {
+    
+    public componentDidMount() {     
         this.currentGame.afterTick = () => {
             this.forceUpdate();
         };
-        window.requestAnimationFrame(this.currentGame.tick);
+        window.requestAnimationFrame(this.currentGame.tick);  
     }
 
     public render() {

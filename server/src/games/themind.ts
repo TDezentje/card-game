@@ -7,14 +7,14 @@ export class TheMind {
             "turnBased": false,
             "turnTime": null,
             "maxPlayer": null,
-            "numberOfCardsInHand": 2,
+            "numberOfCardsInHand": 5,
             "allowInvalidMoves": false,
-            "rules": [
-                {
-                    "property": "display",
-                    "operation": "bigger"
-                }
-            ],
+                "rules": [
+                    {
+                        "property": "display",
+                        "operation": "bigger"
+                    }
+                ],
             "cards": [
                 {
                     "guid": "6ebc1ede-beb5-4be9-ad01-769862f29c80",

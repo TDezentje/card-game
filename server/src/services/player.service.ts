@@ -18,7 +18,7 @@ export class PlayerService {
         "#88b66a", 
         "#482a12", 
         "#0f2598", 
-        "#ffffff"
+        "#eba494"
     ]
 
     public createPlayer(): Player {

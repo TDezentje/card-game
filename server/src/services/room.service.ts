@@ -39,8 +39,10 @@ export class RoomService {
 
     public addUserToRoom(roomGuid: string, player: Player) {
         this.rooms[roomGuid].players.push(player);
-        if(this.rooms[roomGuid].players.length >= this.rooms[roomGuid].game.maxPlayer){
-            this.rooms[roomGuid].isStarted = true;
+        if(this.rooms[roomGuid].game.maxPlayer){
+            if(this.rooms[roomGuid].players.length >= this.rooms[roomGuid].game.maxPlayer){
+                this.rooms[roomGuid].isStarted = true;
+            }
         }
     }
 

@@ -1,12 +1,9 @@
 import { Player } from './player.model';
 
 export class GameState {
-    state: State;
+    action: string;
+    isStarted: boolean;
+    players: Player[];
     nextPlayer?: Player;
-}
-
-export enum State{
-    Started,
-    Running,
-    Stopped
+    data: any;
 }
