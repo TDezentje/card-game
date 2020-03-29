@@ -10,3 +10,12 @@ export function getTweenValue(from: number, to: number, deltaT: number, unitsPer
 export function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
+
+export function rand(arroundZero, max?) {
+    if (max !== undefined) {
+        const min = arroundZero;
+        return Math.random() * (max - min) + min;
+    }
+
+    return (arroundZero - (Math.random() * (arroundZero * 2)));
+}

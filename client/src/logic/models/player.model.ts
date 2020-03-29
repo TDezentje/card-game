@@ -1,7 +1,8 @@
 import { Card, CARD_HEIGHT, CARD_WIDTH } from './card.model';
 import { Table } from './table.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
-import { getTweenValue } from 'logic/helpers/animation.helper';
+import { getTweenValue, rand } from 'logic/helpers/animation.helper';
+import { GameStatus } from 'logic/gamestate';
 
 export class Player {
     public name: string;
@@ -16,12 +17,14 @@ export class Player {
     public futureDegrees;
     public degrees: number;
 
+    public isCleaning = false;
+
     public constructor(obj) {
         Object.assign(this, obj);
         this.cards = [];
     }
 
-    public tick(deltaT: number, screenSize: ScreenSize, table: Table, index: number, playerCount: number) {
+    public tick(deltaT: number, screenSize: ScreenSize, table: Table, index: number, playerCount: number, status: GameStatus) {
         const htmlDegrees = (360 / playerCount * index);
         this.futureDegrees = htmlDegrees + 90;
 
@@ -47,41 +50,67 @@ export class Player {
             return;
         }
 
-        if (index === 0) {
-            for (const [index, card] of this.cards.entries()) {
-                card.futureRotationY = 0;
-                const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
-                card.futureDegrees = htmlDegrees + (4 * distanceFromCenter);
-                card.futurePositionX = (cardPositionX - 70) + (80 * distanceFromCenter);
-                card.futurePositionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
-                this.calculateTweens(card, deltaT);
+        if (status === GameStatus.cleanup) {
+            let minFirePosX, minFirePosY, maxFirePosX, maxFirePosY;
+            if (!this.isCleaning) {
+                const fireRadius = CARD_HEIGHT * 2.5;
+                const fireDirection = this.degrees + 180;
+                const minFireRadians = (fireDirection - 25) * Math.PI/180;
+                const maxFireRadians = (fireDirection + 25) * Math.PI/180;
+    
+                minFirePosX = this.positionX + (fireRadius * Math.cos(minFireRadians));
+                minFirePosY = this.positionY + (fireRadius * Math.sin(minFireRadians));
+                maxFirePosX = this.positionX + (fireRadius * Math.cos(maxFireRadians));
+                maxFirePosY = this.positionY + (fireRadius * Math.sin(maxFireRadians));
+
+                this.isCleaning = true;
             }
-        } else {
-            for (const [index, card] of this.cards.entries()) {
-                card.futureRotationY = 180;
-                const distanceFromCenter = index - (((this.cards.length + 1) / 2) - 1);
-                card.futureDegrees = htmlDegrees + (15 * distanceFromCenter);
-                card.futurePositionX = cardPositionX - (CARD_WIDTH / 2);
-                card.futurePositionY = cardPositionY - CARD_HEIGHT;
-                this.calculateTweens(card, deltaT);
+
+            for (const card of this.cards) {
+                if (!card.isCleaning) {
+                    card.futurePositionX = rand(minFirePosX, maxFirePosX);
+                    card.futurePositionY = rand(minFirePosY, maxFirePosY);
+                    card.futureRotation = card.rotation + (rand(36) * 10);
+                    card.rotationAxis = 'Y';
+                    card.futureDegrees = card.degrees + (rand(36) * 10);
+                    card.futureOriginX = CARD_WIDTH / 2;
+                    card.futureOriginY = CARD_HEIGHT / 2;
+                    card.isCleaning = true;
+                }
+
+                card.tick(deltaT);
             }
+            return;
         }
-    }
 
-    private calculateTweens(card, deltaT) {
-        card.futureOriginX = CARD_WIDTH / 2;
-        card.futureOriginY = CARD_HEIGHT;
-        card.futureAdjustmentX = 0;
-        card.futureAdjustmentY = 0;
+        this.isCleaning = false;
 
-        card.positionX = getTweenValue(card.positionX, card.futurePositionX, deltaT, 6);
-        card.positionY = getTweenValue(card.positionY, card.futurePositionY, deltaT, 6);
-        card.adjustmentX = getTweenValue(card.adjustmentX, card.futureAdjustmentX, deltaT, 6);
-        card.adjustmentY = getTweenValue(card.adjustmentY, card.futureAdjustmentY, deltaT, 6);
+        for (const [cardIndex, card] of this.cards.entries()) {
+            const distanceFromCenter = cardIndex - (((this.cards.length + 1) / 2) - 1);
+            let futureDegrees, futureRotation, futurePositionX, futurePositionY;
+    
+            if (index === 0) {
+                futureDegrees = htmlDegrees + (4 * distanceFromCenter);
+                futureRotation = 0;
+                futurePositionX = (cardPositionX - 70) + (80 * distanceFromCenter);
+                futurePositionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
+            } else {
+                futureDegrees = htmlDegrees + (15 * distanceFromCenter);
+                futureRotation = 180;
+                futurePositionX = cardPositionX - (CARD_WIDTH / 2);
+                futurePositionY = cardPositionY - CARD_HEIGHT;
+            }
 
-        card.rotationY = getTweenValue(card.rotationY, card.futureRotationY, deltaT, 5);
-        card.originX = getTweenValue(card.originX, card.futureOriginX, deltaT, 5);
-        card.originY = getTweenValue(card.originY, card.futureOriginY, deltaT, 5);
-        card.degrees = getTweenValue(card.degrees, card.futureDegrees, deltaT, 5);
+            card.futureRotation = futureRotation;
+            card.futureDegrees = futureDegrees;
+            card.futurePositionX = futurePositionX;
+            card.futurePositionY = futurePositionY;
+            card.futureOriginX = CARD_WIDTH / 2;
+            card.futureOriginY = CARD_HEIGHT;
+            card.futureAdjustmentX = 0;
+            card.futureAdjustmentY = 0;
+    
+            card.tick(deltaT);
+        }
     }
 }

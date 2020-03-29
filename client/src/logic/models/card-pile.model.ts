@@ -1,6 +1,7 @@
 import { Card, CARD_WIDTH, CARD_HEIGHT } from './card.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
-import { getTweenValue } from 'logic/helpers/animation.helper';
+import { rand } from 'logic/helpers/animation.helper';
+import { GameStatus } from 'logic/gamestate';
 
 export class CardPile {
     public cards: Card[];
@@ -9,33 +10,35 @@ export class CardPile {
         this.cards = [];
     }
 
-    public tick(deltaT, screenSize: ScreenSize) {
+    public tick(deltaT, screenSize: ScreenSize, status: GameStatus) {
         const centerX = screenSize.width / 2;
         const centerY = screenSize.height / 2;
 
         for (const card of this.cards) {
-            card.futurePositionX = centerX - (CARD_WIDTH / 2);
-            card.futurePositionY = centerY - (CARD_HEIGHT / 2);
+            if (status === GameStatus.cleanup && !card.isCleaning) {
+                card.futurePositionX = card.positionX + (rand(20) * 10);
+                card.futurePositionY = card.positionY + (rand(20) * 10);
+                card.futureRotation = card.rotation + (rand(36) * 10);
+                card.rotationAxis = 'Y';
+                card.futureDegrees = card.degrees + (rand(36) * 10);
+                card.isCleaning = true;
+            } else if (status !== GameStatus.cleanup) {
+                card.futurePositionX = centerX - (CARD_WIDTH / 2);
+                card.futurePositionY = centerY - (CARD_HEIGHT / 2);
+            }
 
-            card.positionX = getTweenValue(card.positionX, card.futurePositionX, deltaT, 6);
-            card.positionY = getTweenValue(card.positionY, card.futurePositionY, deltaT, 6);
-            card.adjustmentX = getTweenValue(card.adjustmentX, card.futureAdjustmentX, deltaT, 6);
-            card.adjustmentY = getTweenValue(card.adjustmentY, card.futureAdjustmentY, deltaT, 6);
-
-            card.rotationY = getTweenValue(card.rotationY, card.futureRotationY, deltaT, 5);
-            card.originX = getTweenValue(card.originX, card.futureOriginX, deltaT, 5);
-            card.originY = getTweenValue(card.originY, card.futureOriginY, deltaT, 5);
-            card.degrees = getTweenValue(card.degrees, card.futureDegrees, deltaT, 5);
+            card.tick(deltaT);
         }
     }
 
     public addCard(card: Card) {
         this.cards.push(card);
-        card.futureRotationY = 0;
-        card.futureOriginX = (CARD_WIDTH / 2) + (10 - (Math.random() * 20));
-        card.futureOriginY = (CARD_HEIGHT / 2) + (10 - (Math.random() * 20));
-        card.futureAdjustmentX = (40 - (Math.random() * 80));
-        card.futureAdjustmentY = (40 - (Math.random() * 80));
-        card.futureDegrees = card.degrees + (55 - (Math.random() * 110));
+        card.futureRotation = 0;
+        card.rotationAxis = 'X';
+        card.futureOriginX = (CARD_WIDTH / 2) + rand(10);
+        card.futureOriginY = (CARD_HEIGHT / 2) + rand(10);
+        card.futureAdjustmentX = rand(30);
+        card.futureAdjustmentY = rand(30);
+        card.futureDegrees = card.degrees + rand(55);
     }
 }

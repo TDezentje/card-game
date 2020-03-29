@@ -20,7 +20,7 @@ export function GameElement({
     }, [gameState]);
 
     const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
-    
+
     return <div class={css.gameContainer}>
         <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}} />
 
@@ -55,18 +55,14 @@ export function GameElement({
         }
    
 
-        {
-            gameState.status === GameStatus.gameover ?  <div class={css.overlay}>
-                <span class={css.title}>GAME OVER!</span>
-                {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Opnieuw</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
-            </div> : null
-        }  
+        <div class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
+            <span class={css.title}>GAME OVER!</span>
+            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Opnieuw</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+        </div>
 
-        {
-            gameState.status === GameStatus.finished ?  <div class={css.overlay}>
-                <span class={css.title}>HOERA!</span>
-                {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende level</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
-            </div> : null
-        }
+        <div class={`${css.overlay} ${gameState.status === GameStatus.finished ? css.visible : ''}`}>
+            <span class={css.title}>HOERA!</span>
+            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende level</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+        </div>
     </div>;
 }

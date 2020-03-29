@@ -50,7 +50,7 @@ export class GameState {
 
         this.table.tick(screenSize);
         this.stack.tick(screenSize);
-        this.pile.tick(deltaT, screenSize);
+        this.pile.tick(deltaT, screenSize, this.status);
 
         const indexOfMe = this.players.findIndex(p => p.guid === this.myPlayerGuid);
         for (const [index, player] of this.players.entries()) {
@@ -58,7 +58,7 @@ export class GameState {
             if (relativeIndex < 0) {
                 relativeIndex = this.players.length + relativeIndex;
             }
-            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length);
+            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length, this.status);
         }
 
         this.afterTick?.();
@@ -66,7 +66,7 @@ export class GameState {
     }
 
     public playCard(card: Card) {
-        if (!this.nextPlayerGuid || this.nextPlayerGuid !== this.myPlayerGuid) {
+        if (this.nextPlayerGuid && this.nextPlayerGuid !== this.myPlayerGuid) {
             return;
         }
         this.websocket.send(JSON.stringify({
@@ -154,16 +154,18 @@ export class GameState {
                 for (const p of data.players) {
                     const promise = sleep(50);
 
-                    const card: Card = p.cards[i];
+                    let card: Card = p.cards[i];
                     if (!card) {
                         continue;
                     }
+                    card = new Card(card);
 
                     card.positionX = this.stack.card.positionX;
                     card.positionY = this.stack.card.positionY;
                     card.originX = this.stack.card.originX;
                     card.originY = this.stack.card.originY;
-                    card.rotationY = this.stack.card.rotationY;
+                    card.rotation = this.stack.card.rotation;
+                    card.rotationAxis = 'Y';
                     card.degrees = this.stack.card.degrees;
                     card.adjustmentX = this.stack.card.adjustmentX;
                     card.adjustmentY = this.stack.card.adjustmentY;
@@ -204,10 +206,12 @@ export class GameState {
     public handleGameOver() {
         setTimeout(() => {
             this.status = GameStatus.gameover;
-        }, 1000);
+        }, 600);
     }
 
     public handleFinished() {
-        this.status = GameStatus.finished;
+        setTimeout(() => {
+            this.status = GameStatus.finished;
+        }, 600);
     }
 }

@@ -12,7 +12,8 @@ export class CardStack {
     public tick(screenSize: ScreenSize) {
         this.card.positionX = screenSize.width - CARD_WIDTH - 10;
         this.card.positionY = screenSize.height - CARD_HEIGHT - 10;
-        this.card.rotationY = 180;
+        this.card.rotation = 180;
+        this.card.rotationAxis = 'X';
         this.card.degrees = 0;
         this.card.adjustmentX = 0;
         this.card.adjustmentY = 0;
