@@ -15,7 +15,8 @@ export enum GameAction {
     Finished = 'finished',
     PlayerLeft = 'player-left',
     NextGame = 'next-game',
-    TakeCards = 'take-cards'
+    TakeCards = 'take-cards',
+    AdminChanged = 'admin-changed'
 }
 export class WebsocketService {
     private wssGame;

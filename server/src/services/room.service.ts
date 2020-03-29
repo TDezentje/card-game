@@ -45,10 +45,4 @@ export class RoomService {
             }
         }
     }
-
-    public deleteUserFromRoom(roomGuid: string, player: Player) {
-        const room = this.getRoom(roomGuid);
-        const id = room.players.findIndex(p => p.guid === player.guid);
-        room.players.splice(id, 1);
-    }
 }

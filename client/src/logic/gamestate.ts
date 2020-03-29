@@ -135,6 +135,9 @@ export class GameState {
             case 'finished':
                 this.handleFinished(data.actionData);
                 break;
+            case 'admin-changed':
+                this.handleAdminChanged(data.actionData);
+                break;
         }
     }
 
@@ -222,8 +225,9 @@ export class GameState {
         this.currentPlayerGuid = data.playerGuid;
     } 
 
-    public handleTakeCards(data) {
+    public async handleTakeCards(data) {
         for (const card of data.cards) {
+            await sleep(50);
             this.addCardToPlayerFromStack(data.playerGuid, card);
             this.stack.hasCards = data.hasStack;
         }
@@ -242,6 +246,11 @@ export class GameState {
             this.rotation = GameRotation.None;
             this.winner = this.players.find(p => p.guid === data?.playerGuid);
         }, 600);
+    }
+
+    private handleAdminChanged(data) {
+        this.players.find(p => p.guid === data.playerGuid).isAdmin = true;
+        this.isAdmin = data.playerGuid === this.myPlayerGuid;
     }
 
     public handleEffect(data) {
@@ -266,7 +275,7 @@ export class GameState {
     }
 
     private async handleResetPile() {
-        const succeeded = this.pile.resetCardsToStack(this.stack);
+        const succeeded = await this.pile.resetCardsToStack(this.stack);
 
         if (succeeded) {
             await sleep(50);

@@ -98,9 +98,18 @@ export class GameService {
     public leaveGame(playerGuid: string) {
         const room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {
-            room.players.splice(room.players.findIndex(p => p.guid === playerGuid), 1);
+            const idx = room.players.findIndex(p => p.guid === playerGuid);
+            const player = room.players[idx];
+            room.players.splice(idx, 1);
+            if (player?.isAdmin) {
+                room.players[0].isAdmin = true;
+                this.websocketService.sendMessageToRoom(room, GameAction.AdminChanged, {
+                    playerGuid: room.players[0].guid
+                });
+            }
             room.game.leaveGame(playerGuid);
         }
+        
     }
 
     public getRoomByPlayerGuid(playerGuid: string) {

@@ -4,6 +4,7 @@ import { Player } from 'models/player.model';
 
 export class CrazyEights extends GameLogic {
     private _currentPlayer: GamePlayer;
+    private activeEffectStack: GameEffect[] = [];
     protected hasPile = true;
 
     private get currentPlayer() {
@@ -42,16 +43,33 @@ export class CrazyEights extends GameLogic {
             return;
         }
 
-        const randomIdx = Math.floor(Math.random() * Math.floor(this.cardsToUse.length));
-        const card = this.cardsToUse.splice(randomIdx, 1);
-        this.currentPlayer.cards.push(...card);
+        const count = this.activeEffectStack.reduce((t,c) => t + c.effectData.count, 0) || 1;
+        this.activeEffectStack = [];
+        if (this.cardsOnPile.length > 1 && this.cardsToUse.length < count) {
+            this.resetPile();
+        }
+        
+
+        const cards: Card[] = [];
+        for (let i = 0; i < count; i++) {
+            const randomIdx = Math.floor(Math.random() * Math.floor(this.cardsToUse.length));
+            cards.push(...this.cardsToUse.splice(randomIdx, 1));
+        }
+
+        this.currentPlayer.cards.push(...cards);
         this.currentPlayer = this.getNextPlayer(1);  
-        this.onTakeCards(this, playerGuid, card, this.cardsToUse.length !== 0);   
-        if (card.length > 0 && this.cardsOnPile.length > 0 && this.cardsToUse.length === 0) {
-            this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
-            this.cardsOnPile = [];
-            this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
-        }   
+        this.onTakeCards(this, playerGuid, cards, this.cardsToUse.length !== 0);  
+
+
+        if (this.cardsOnPile.length > 1 && this.cardsToUse.length === 0) {
+            this.resetPile();
+        }
+    }
+
+    private resetPile() {
+        this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
+        this.cardsOnPile = [];
+        this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
     }
 
     public playCard(playerGuid: string, cardGuid: string) {
@@ -98,7 +116,19 @@ export class CrazyEights extends GameLogic {
 
         if (card.corner.leftTop === '7') {
             this.currentPlayer = this.getNextPlayer(0);
-            return
+            return;
+        }
+
+        if (card.corner.leftTop === '2') {
+            this.activeEffectStack.push(new GameEffect(GameEffectType.TakeCard, {
+                count: 2
+            }));
+        }
+
+        if (card.corner.leftTop === '✪') {
+            this.activeEffectStack.push(new GameEffect(GameEffectType.TakeCard, {
+                count: 5
+            }));
         }
 
         this.currentPlayer = this.getNextPlayer(1);
@@ -128,6 +158,10 @@ export class CrazyEights extends GameLogic {
         }
         const lastPlayedCard = this.cardsOnPile[lastCardIdx];
 
+        if ((lastPlayedCard.corner.leftTop === '2' || lastPlayedCard.corner.leftTop === '✪') && this.activeEffectStack.length > 0) {
+            return ['2', '✪'].includes(card.corner.leftTop);
+        }
+
         // Same type of card or same display of card
         if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom ||
             lastPlayedCard.corner.leftTop === card.corner.leftTop ||
@@ -154,12 +188,6 @@ export class CrazyEights extends GameLogic {
     }
 
     private static cards: Card[] = [
-        {
-            guid: 'dbbf01fd-dc01-4781-b621-740d4d82ae24',
-            display: '1',
-            color: '#f91c2c',
-            corner: { leftTop: '1', leftBottom: '♥', rightTop: '♥', rightBottom: '1' }
-        },
         {
             guid: 'ed00453b-89dd-41dc-8096-525728e312a0',
             display: '2',
@@ -239,11 +267,6 @@ export class CrazyEights extends GameLogic {
             corner: { leftTop: 'A', leftBottom: '♥', rightTop: '♥', rightBottom: 'A' }
         },
         {
-            guid: 'a6c4d146-1911-4f33-ab68-6df732a58c31',
-            display: '1',
-            corner: { leftTop: '1', leftBottom: '♠', rightTop: '♠', rightBottom: '1' }
-        },
-        {
             guid: 'd3a166c8-4a08-40f7-aff5-47cb8a8382f7',
             display: '2',
             corner: { leftTop: '2', leftBottom: '♠', rightTop: '♠', rightBottom: '2' }
@@ -307,12 +330,6 @@ export class CrazyEights extends GameLogic {
             guid: 'dc1fbbb4-f4a0-4b06-af2e-b78d1111570c',
             display: '♠',
             corner: { leftTop: 'A', leftBottom: '♠', rightTop: '♠', rightBottom: 'A' }
-        },
-        {
-            guid: '71698c62-605c-485a-9094-55b0b9ae7080',
-            display: '1',
-            color: '#f91c2c',
-            corner: { leftTop: '1', leftBottom: '♦', rightTop: '♦', rightBottom: '1' }
         },
         {
             guid: '1f97dd68-ece5-4c07-ab60-adbed4e76fac',
@@ -391,11 +408,6 @@ export class CrazyEights extends GameLogic {
             display: '♦',
             color: '#f91c2c',
             corner: { leftTop: 'A', leftBottom: '♦', rightTop: '♦', rightBottom: 'A' }
-        },
-        {
-            guid: 'ab13a399-2e98-4647-b5e8-fdb49024525e',
-            display: '1',
-            corner: { leftTop: '1', leftBottom: '♣', rightTop: '♣', rightBottom: '1' }
         },
         {
             guid: '7142cfd3-6658-4dd0-89c2-ea6597d00736',

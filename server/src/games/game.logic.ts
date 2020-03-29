@@ -4,7 +4,8 @@ import { Player } from 'models/player.model';
 export enum GameEffectType {
     RotationChanged = 'rotation-changed',
     PlayerSkipped = 'player-skipped',
-    ResetPile = 'reset-pile'
+    ResetPile = 'reset-pile',
+    TakeCard = 'take-card'
 }
 
 export class GameEffect {

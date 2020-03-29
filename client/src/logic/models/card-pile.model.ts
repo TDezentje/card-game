@@ -1,6 +1,6 @@
 import { Card, CARD_WIDTH, CARD_HEIGHT } from './card.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
-import { rand } from 'logic/helpers/animation.helper';
+import { rand, sleep } from 'logic/helpers/animation.helper';
 import { GameStatus } from 'logic/gamestate';
 import { CardStack } from './card-stack.model';
 
@@ -51,7 +51,7 @@ export class CardPile {
         card.futureDegrees = card.degrees + rand(55);
     }
 
-    public resetCardsToStack(stack: CardStack) {
+    public async resetCardsToStack(stack: CardStack) {
         if (this.cards.length <= 1) {
             return false;
         }
@@ -60,6 +60,8 @@ export class CardPile {
             if (index === this.cards.length -1) {
                 continue;
             }
+
+            await sleep(25);
 
             card.futurePositionX = stack.card.positionX;
             card.futurePositionY = stack.card.positionY;
