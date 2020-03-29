@@ -5,6 +5,109 @@
     transform: translate(-50%, -50%);
     border-radius: 50%;
     background: radial-gradient(rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 65%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .rotationIndicator {
+        width: 60%;
+        height: 60%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        opacity: 0;
+        transition: opacity .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        transform-origin: center;
+
+        &.none {
+            opacity: 0;
+        }
+
+        &.clockwise {
+            opacity: 1;    
+            animation: rotate-clockwise 10s linear;
+            animation-iteration-count: infinite;
+
+            &:before {
+                border-top-color: transparent;
+            }
+
+            .arrow {
+                &:first-child {
+                    transform: translate(2.5px, -20px);
+                }
+                &:last-child {
+                    transform: translate(-2.5px, 20px);
+                }
+            }
+        }
+        
+        &.antiClockwise {
+            opacity: 1;    
+            animation: rotate-anti-clockwise 10s linear;
+            animation-iteration-count: infinite;
+
+            &:before {
+                border-top-color: transparent;
+                transform: translate(-50%, -50%) rotate(45deg);
+            }
+
+            .arrow {
+                &:first-child {
+                    transform: rotate(180deg) translate(-2.5px, -20px);
+                }
+                &:last-child {
+                    transform: rotate(180deg) translate(2.5px, 20px);
+                }
+            }
+        }
+
+        &:before {
+            content: "";
+            border: 4px dashed rgba(255, 255, 255, .1);
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: center;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            width: calc(100% - 40px);
+            height: calc(100% - 40px);
+            box-sizing: border-box;
+
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+        }
+
+        .arrow {
+            border: 20px solid transparent;
+            border-radius: 8px;
+
+            &:first-child {
+                border-bottom-color: rgba(255, 255, 255, .1);
+            }
+            &:last-child {
+                border-top-color: rgba(255, 255, 255, .1);
+            }
+        }
+    }
+}
+
+@keyframes rotate-clockwise {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+@keyframes rotate-anti-clockwise {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-360deg);
+    }
 }
 
 .nameTag {

@@ -22,7 +22,12 @@ export function GameElement({
     const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
 
     return <div class={css.gameContainer}>
-        <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}} />
+        <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}}>
+            <div class={`${css.rotationIndicator} ${css[gameState.rotation]}`}> 
+                <div class={css.arrow} />
+                <div class={css.arrow} />
+            </div>
+        </div>
 
         {
             me && <div class={css.hud} style={{ borderColor: me.color }}>

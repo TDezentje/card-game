@@ -17,7 +17,8 @@ export class GameService {
         const theMind = new TheMind();
         theMind.game.cardsToUse = JSON.parse(JSON.stringify(theMind.game.cards));
         theMind.game.cardsOnStack = [];
-        this.games.push(theMind);
+        // this.games.push(theMind);
+        
         const crazyEights = new CrazyEights();
         crazyEights.game.cardsToUse = JSON.parse(JSON.stringify(crazyEights.game.cards));
         crazyEights.game.cardsOnStack = [];
@@ -72,6 +73,7 @@ export class GameService {
                 this.findGameLogic(game.name).resetGame(game);
                 room.game = game;
             }
+            gameState.action = "start";
             this.startGame(playerGuid);
         }
         return gameState;

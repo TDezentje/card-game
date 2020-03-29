@@ -13,6 +13,12 @@ export enum GameStatus {
     cleanup
 }
 
+export enum GameRotation{
+    None = 'none',
+    Clockwise = 'clockwise',
+    AntiClockwise = 'antiClockwise',
+}
+
 export class GameState {
     public players: Player[];
     public myPlayerGuid: string;
@@ -22,6 +28,7 @@ export class GameState {
 
     public isAdmin: boolean;
     public status: GameStatus;
+    public rotation: GameRotation = GameRotation.None;
 
     public table: Table;
     public websocket = new WebSocket("ws://" + location.hostname + ':8001');
@@ -179,6 +186,8 @@ export class GameState {
                     await promise;
                 };
             }
+
+            this.rotation = GameRotation.Clockwise;
         }
     }
 
@@ -206,12 +215,14 @@ export class GameState {
     public handleGameOver() {
         setTimeout(() => {
             this.status = GameStatus.gameover;
+            this.rotation = GameRotation.None;
         }, 600);
     }
 
     public handleFinished() {
         setTimeout(() => {
             this.status = GameStatus.finished;
+            this.rotation = GameRotation.None;
         }, 600);
     }
 }
