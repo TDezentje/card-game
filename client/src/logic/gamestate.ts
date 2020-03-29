@@ -197,7 +197,7 @@ export class GameState {
         }
 
         const player = this.players.find(p => p.guid === data.actionByPlayer.guid);
-        const cardIndex = player.cards.findIndex(c => c.guid === data.data.cardGuid);
+        const cardIndex = player.cards.findIndex(c => c.guid === data.data.card.guid);
         this.nextPlayerGuid = data.data.nextPlayerGuid;
 
         if (cardIndex === -1) {
