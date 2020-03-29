@@ -63,6 +63,11 @@ export class GameService {
         room.game.takeCards(playerGuid);
     }
 
+    public effectResponse(playerGuid: string, optionGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        room.game.answerMultipleChoice(playerGuid, optionGuid);
+    }
+
     public nextGame(playerGuid: string) {
         const player = this.playerService.getPlayer(playerGuid);
         
@@ -101,7 +106,7 @@ export class GameService {
             const idx = room.players.findIndex(p => p.guid === playerGuid);
             const player = room.players[idx];
             room.players.splice(idx, 1);
-            if (player?.isAdmin) {
+            if (player?.isAdmin && room.players.length > 0) {
                 room.players[0].isAdmin = true;
                 this.websocketService.sendMessageToRoom(room, GameAction.AdminChanged, {
                     playerGuid: room.players[0].guid

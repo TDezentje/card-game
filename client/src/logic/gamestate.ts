@@ -19,6 +19,11 @@ export enum GameRotation{
     counterClockwise = 'counterClockwise',
 }
 
+interface MultipleChoice {
+    options: { guid: string; text: string; color: string}[];
+    playerGuid: string;
+}
+
 export class GameState {
     public players: Player[];
     public myPlayerGuid: string;
@@ -34,6 +39,8 @@ export class GameState {
     public table: Table;
     public websocket = new WebSocket("ws://" + location.hostname + ':8001');
     public afterTick: () => void;
+
+    public activeMultipleChoice: MultipleChoice;
 
     private lastTick = 0;
 
@@ -98,6 +105,13 @@ export class GameState {
     public takeCard() {
         this.websocket.send(JSON.stringify({
             action: 'take-cards'
+        }));
+    }
+
+    public selectOption(guid) {
+        this.websocket.send(JSON.stringify({
+            action: 'effect-response',
+            optionGuid: guid
         }));
     }
 
@@ -223,6 +237,7 @@ export class GameState {
 
     private handleNextPlayer(data) {
         this.currentPlayerGuid = data.playerGuid;
+        delete this.activeMultipleChoice;
     } 
 
     public async handleTakeCards(data) {
@@ -261,6 +276,9 @@ export class GameState {
             case 'reset-pile':
                 this.handleResetPile();
                 break;
+            case 'multiple-choice':
+                this.handleMultipleChoice(data.effectData, data.playerGuid);
+                break;
         }
     }
 
@@ -281,5 +299,12 @@ export class GameState {
             await sleep(50);
             this.stack.hasCards = true;
         }
+    }
+
+    private handleMultipleChoice(data, playerGuid) {
+        this.activeMultipleChoice = {
+            options: data.options,
+            playerGuid
+        };
     }
 }

@@ -33,6 +33,10 @@ export class TheMind extends GameLogic {
     public takeCards() {
 
     }
+    
+    public answerMultipleChoice() {
+
+    }
 
     public isValidCard(cardGuid: string) {
         const cardsInCurrentGame = TheMind.cards.filter(c => !this.cardsToUse.some(ctu => ctu.guid == c.guid));

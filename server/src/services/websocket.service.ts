@@ -16,7 +16,8 @@ export enum GameAction {
     PlayerLeft = 'player-left',
     NextGame = 'next-game',
     TakeCards = 'take-cards',
-    AdminChanged = 'admin-changed'
+    AdminChanged = 'admin-changed',
+    EffectResponse = 'effect-response'
 }
 export class WebsocketService {
     private wssGame;
@@ -59,10 +60,9 @@ export class WebsocketService {
                     case GameAction.TakeCards:
                         self.gameService.takeCards(this.playerGuid);
                         break;
-                }
-
-                if (turn.action === "effect-response") {
-                    
+                    case GameAction.EffectResponse:
+                        self.gameService.effectResponse(this.playerGuid, turn.optionGuid);
+                        break;
                 }
             });
 

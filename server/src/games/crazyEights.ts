@@ -1,10 +1,13 @@
 import { Card } from 'models/card.model';
 import { GameLogic, GamePlayer, GameEffect, GameEffectType } from './game.logic';
 import { Player } from 'models/player.model';
+const uuid = require('uuid/v4');
 
 export class CrazyEights extends GameLogic {
     private _currentPlayer: GamePlayer;
-    private activeEffectStack: GameEffect[] = [];
+    private activeMultipleChoice: GameEffect;
+    private activeTakeCard: GameEffect;
+    private forcedSymbol: string;
     protected hasPile = true;
 
     private get currentPlayer() {
@@ -39,16 +42,20 @@ export class CrazyEights extends GameLogic {
     }
 
     public takeCards(playerGuid: string) {
+        if (this.activeMultipleChoice) {
+            return;
+        }
+
         if (playerGuid !== this.currentPlayer?.guid) {
             return;
         }
 
-        const count = this.activeEffectStack.reduce((t,c) => t + c.effectData.count, 0) || 1;
-        this.activeEffectStack = [];
+        const count = this.activeTakeCard?.effectData.count || 1;
+        delete this.activeTakeCard;
         if (this.cardsOnPile.length > 1 && this.cardsToUse.length < count) {
             this.resetPile();
         }
-        
+
 
         const cards: Card[] = [];
         for (let i = 0; i < count; i++) {
@@ -57,8 +64,8 @@ export class CrazyEights extends GameLogic {
         }
 
         this.currentPlayer.cards.push(...cards);
-        this.currentPlayer = this.getNextPlayer(1);  
-        this.onTakeCards(this, playerGuid, cards, this.cardsToUse.length !== 0);  
+        this.currentPlayer = this.getNextPlayer(1);
+        this.onTakeCards(this, playerGuid, cards, this.cardsToUse.length !== 0);
 
 
         if (this.cardsOnPile.length > 1 && this.cardsToUse.length === 0) {
@@ -82,9 +89,10 @@ export class CrazyEights extends GameLogic {
             return;
         }
 
+        delete this.forcedSymbol;
         this.cardsOnPile.push(card);
         this.takeCardFromHand(cardGuid);
-        
+
         const previousPlayer = this.currentPlayer;
         this.checkEffects(card);
         this.onPlayCard(this, playerGuid, card);
@@ -97,7 +105,14 @@ export class CrazyEights extends GameLogic {
             this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
             this.cardsOnPile = [];
             this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
-        }   
+        }
+    }
+
+    private addTakeCardEffect(count) {
+        if (!this.activeTakeCard) {
+            this.activeTakeCard = new GameEffect(GameEffectType.TakeCard, {count: 0});
+        }
+        this.activeTakeCard.effectData.count += count;
     }
 
     private checkEffects(card: Card) {
@@ -120,24 +135,68 @@ export class CrazyEights extends GameLogic {
         }
 
         if (card.corner.leftTop === '2') {
-            this.activeEffectStack.push(new GameEffect(GameEffectType.TakeCard, {
-                count: 2
-            }));
+            this.addTakeCardEffect(2);
         }
 
         if (card.corner.leftTop === '✪') {
-            this.activeEffectStack.push(new GameEffect(GameEffectType.TakeCard, {
-                count: 5
-            }));
+            this.addTakeCardEffect(5);
+        }
+
+        if (card.corner.leftTop === 'J' || card.corner.leftTop === '✪') {
+            this.activeMultipleChoice = new GameEffect(GameEffectType.MultipleChoice, {
+                options: [{
+                    guid: uuid(),
+                    text: '♣',
+                    color: '#323232'
+                },
+                {
+                    guid: uuid(),
+                    text: '♥',
+                    color: '#f91c2c'
+                },
+                {
+                    guid: uuid(),
+                    text: '♠',
+                    color: '#323232'
+                },
+                {
+                    guid: uuid(),
+                    text: '♦',
+                    color: '#f91c2c'
+                }]
+            }, this.currentPlayer.guid);
+
+            this.onEffect(this, this.activeMultipleChoice);
+            return;
         }
 
         this.currentPlayer = this.getNextPlayer(1);
     }
 
-    private getNextPlayer(stepCount: number){
+    public answerMultipleChoice(playerGuid: string, answerGuid: string) {
+        if (!this.activeMultipleChoice && playerGuid !== this.activeMultipleChoice.playerGuid) {
+            return;
+        }
+
+        const answer = this.activeMultipleChoice.effectData.options.find(o => o.guid === answerGuid);
+        if(!answer) {
+            return;
+        }
+
+        this.forcedSymbol = answer.text;
+        this.onEffect(this, new GameEffect(GameEffectType.ForceColor, {
+            text: answer.text,
+            color: answer.color
+        }));
+
+        delete this.activeMultipleChoice;
+        this.currentPlayer = this.getNextPlayer(1);
+    }
+
+    private getNextPlayer(stepCount: number) {
         let currentPlayerIdx = this.players.findIndex(p => p.guid === this.currentPlayer.guid);
-        if(this.rotationClockwise) {
-            currentPlayerIdx +=stepCount;
+        if (this.rotationClockwise) {
+            currentPlayerIdx += stepCount;
             if (currentPlayerIdx >= this.players.length) {
                 currentPlayerIdx = currentPlayerIdx % this.players.length;
             }
@@ -149,28 +208,32 @@ export class CrazyEights extends GameLogic {
             }
         }
         return this.players[currentPlayerIdx];
-    } 
+    }
 
     protected isValidCard(card: Card) {
+        if (this.activeMultipleChoice) {
+            return false;
+        }
+
         const lastCardIdx = this.cardsOnPile.length - 1;
         if (lastCardIdx === -1) {
             return true;
         }
         const lastPlayedCard = this.cardsOnPile[lastCardIdx];
 
-        if ((lastPlayedCard.corner.leftTop === '2' || lastPlayedCard.corner.leftTop === '✪') && this.activeEffectStack.length > 0) {
+        if ((lastPlayedCard.corner.leftTop === '2' || lastPlayedCard.corner.leftTop === '✪') && this.activeTakeCard) {
             return ['2', '✪'].includes(card.corner.leftTop);
         }
 
         // Same type of card or same display of card
-        if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom ||
+        if ((this.forcedSymbol || lastPlayedCard.corner.leftBottom) === card.corner.leftBottom ||
             lastPlayedCard.corner.leftTop === card.corner.leftTop ||
             lastPlayedCard.display === card.display) {
             return true;
         }
 
         // Card is joker
-        if (card.corner.leftTop === '✪' || lastPlayedCard.corner.leftTop === '✪') {
+        if (card.corner.leftTop === '✪') {
             return true;
         }
 

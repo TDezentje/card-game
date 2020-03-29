@@ -5,11 +5,13 @@ export enum GameEffectType {
     RotationChanged = 'rotation-changed',
     PlayerSkipped = 'player-skipped',
     ResetPile = 'reset-pile',
-    TakeCard = 'take-card'
+    TakeCard = 'take-card',
+    MultipleChoice = 'multiple-choice',
+    ForceColor = 'force-color'
 }
 
 export class GameEffect {
-    public constructor(public type: GameEffectType, public effectData?: any) {
+    public constructor(public type: GameEffectType, public effectData?: any, public playerGuid?: string) {
 
     }
 }
@@ -34,6 +36,7 @@ export abstract class GameLogic {
     public abstract nextGame();
     public abstract resetGame();
     public abstract playCard(_playerGuid: string, cardGuid: string);
+    public abstract answerMultipleChoice(playerGuid: string, answerGuid: string)
     public abstract takeCards(_playerGuid: string);
     
     public startGame(players: Player[]) {

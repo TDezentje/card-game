@@ -27,6 +27,10 @@ export function GameElement({
         gameState.takeCard();
     }, [gameState]);
 
+    const onOptionClick = useCallback((guid: string) => {
+        gameState.selectOption(guid);
+    }, [gameState]);
+
     const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
 
     return <div class={css.gameContainer}>
@@ -87,6 +91,15 @@ export function GameElement({
                  ] : null
             }
             {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende spel</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+        </div>
+
+        <div class={`${css.overlay} ${gameState.activeMultipleChoice ? css.visible : ''}`}>
+            <span class={css.sub}>Maak je keuze</span>
+            <div class={css.options} style={{width: gameState.table.size, height: gameState.table.size}}>
+            {
+                gameState.activeMultipleChoice?.options.map(o => <button onClick={() => onOptionClick(o.guid)} disabled ={gameState.activeMultipleChoice.playerGuid !== me.guid} style={{color: o.color}}>{o.text}</button>)
+            }
+            </div>
         </div>
     </div>;
 }

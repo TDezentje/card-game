@@ -242,6 +242,37 @@
         color: #fff;
         font-size: 1.5rem;
     }
+
+    
+    .options {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+
+        button {
+            width: 175px;
+            height: 175px;
+            font-size: 7rem;
+            background: white;
+            border: none;
+            border-radius: 15px;
+            margin: 8px;
+            box-sizing: border-box;
+            padding: 0;
+            box-shadow: 0 7px 8px -4px rgba(0,0,0,.2), 0 12px 17px 2px rgba(0,0,0,.14), 0 5px 22px 4px rgba(0,0,0,.12);
+            transition: transform .2s cubic-bezier(0.4, 0.0, 0.2, 1);
+           
+            &:not([disabled]) {
+                cursor: pointer;
+
+                :hover {
+                    transform: scale(1.2);
+                }
+            }
+        }
+    }
 }
 
 .hud {
