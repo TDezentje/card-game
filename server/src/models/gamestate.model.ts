@@ -8,7 +8,6 @@ export class GameState {
     players: Player[];
     data: {
         card?: Card;
-        cardGuid?: string;
         isValid?: boolean;
         gameOver?: boolean;
         nextPlayerGuid?: string;

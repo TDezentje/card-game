@@ -134,8 +134,7 @@ export class GameService {
         gameState.data = {
             gameOver: false,
             isValid: true,
-            card: card,
-            cardGuid: cardGuid
+            card: card
         };
         const valid: Valid = this.games.find(g => g.id === room.game.name).isValidCard(cardGuid, room.game.cardsOnStack, room.game.cardsToUse);
         if (!valid.isValid) {
