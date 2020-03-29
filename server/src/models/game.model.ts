@@ -1,5 +1,4 @@
 import { Card } from './card.model';
-import { Player } from './player.model';
 
 export class Game {
     name: string;
@@ -10,10 +9,9 @@ export class Game {
     allowInvalidMoves: boolean;
     hasNextLevel: boolean;
     cards: Card[];
+
     cardsToUse?: Card[];
     cardsOnStack?: Card[];
-    
     level?: number;
     gameOver?: boolean;
-    currentPlayer?: Player;
 }

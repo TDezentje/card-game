@@ -12,10 +12,12 @@ export class CrazyEights extends GameLogic {
         const lastPlayedCard = cardsOnStack[lastCardIdx];
 
         // Same type of card or same display of card
-        if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom || lastPlayedCard.display === card.display) {
+        if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom ||
+            lastPlayedCard.corner.leftTop === card.corner.leftTop ||
+            lastPlayedCard.display === card.display) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -23,7 +25,7 @@ export class CrazyEights extends GameLogic {
         this.resetGame(game);
     }
 
-    public resetGame(game) {        
+    public resetGame(game) {
         game.cardsToUse = JSON.parse(JSON.stringify(game.cards));
         game.cardsOnStack = [];
     }

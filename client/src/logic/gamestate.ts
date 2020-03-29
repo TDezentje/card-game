@@ -16,6 +16,7 @@ export enum GameStatus {
 export class GameState {
     public players: Player[];
     public myPlayerGuid: string;
+    public nextPlayerGuid: string;
     public stack: CardStack;
     public pile: CardPile;
 
@@ -34,7 +35,7 @@ export class GameState {
         this.stack = new CardStack();
         this.pile = new CardPile();
         this.table = new Table();
-        
+
         this.websocket.onmessage = this.onWebsocketMessage.bind(this);
     }
 
@@ -46,7 +47,7 @@ export class GameState {
             width: document.body.clientWidth,
             height: document.body.clientHeight
         };
-        
+
         this.table.tick(screenSize);
         this.stack.tick(screenSize);
         this.pile.tick(deltaT, screenSize);
@@ -65,6 +66,9 @@ export class GameState {
     }
 
     public playCard(card: Card) {
+        if (!this.nextPlayerGuid || this.nextPlayerGuid !== this.myPlayerGuid) {
+            return;
+        }
         this.websocket.send(JSON.stringify({
             action: 'play',
             cardGuid: card.guid
@@ -112,18 +116,18 @@ export class GameState {
     }
 
     private handleJoin(data) {
-        this.myPlayerGuid = data.data.guid;
-        this.isAdmin = data.data.isAdmin;
+        this.myPlayerGuid = data.actionByPlayer.guid;
+        this.isAdmin = data.actionByPlayer.isAdmin;
         this.players = data.players.map(p => new Player(p));
         this.status = GameStatus.started;
     }
 
     private handlePlayerJoined(data) {
-        this.players.push(new Player(data.data));
+        this.players.push(new Player(data.actionByPlayer));
     }
 
     private handlePlayerleft(data) {
-        this.players.splice(this.players.findIndex(p => p.guid === data.guid), 1);
+        this.players.splice(this.players.findIndex(p => p.guid === data.actionByPlayer.guid), 1);
     }
 
     private async handleStart(data) {
@@ -134,24 +138,27 @@ export class GameState {
             }
 
             this.status = GameStatus.running;
-            this.pile.cards = [];        
+            this.pile.cards = [];
             this.stack.hasCards = true;
+            if (data.data && data.data.nextPlayerGuid) {
+                this.nextPlayerGuid = data.data.nextPlayerGuid;
+            }
 
             this.players = data.players.map(p => {
                 p = JSON.parse(JSON.stringify(p));
                 delete p.cards;
                 return new Player(p);
             });
-            
+
             for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
                 for (const p of data.players) {
                     const promise = sleep(50);
-                    
+
                     const card: Card = p.cards[i];
                     if (!card) {
                         continue;
                     }
-                    
+
                     card.positionX = this.stack.card.positionX;
                     card.positionY = this.stack.card.positionY;
                     card.originX = this.stack.card.originX;
@@ -174,12 +181,13 @@ export class GameState {
     }
 
     public handlePlay(data) {
-        if (!data.data.result) {
+        if (!data.data.isValid && !data.data.gameOver) {
             return;
         }
 
-        const player = this.players.find(p => p.guid === data.data.playerGuid);
+        const player = this.players.find(p => p.guid === data.actionByPlayer.guid);
         const cardIndex = player.cards.findIndex(c => c.guid === data.data.cardGuid);
+        this.nextPlayerGuid = data.data.nextPlayerGuid;
 
         if (cardIndex === -1) {
             return;
