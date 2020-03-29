@@ -19,6 +19,14 @@ export function GameElement({
         gameState.nextGame();
     }, [gameState]);
 
+    const onMyCardClick = useCallback((card) => {
+        gameState.playCard(card);
+    }, [gameState]);
+
+    const onStackClick = useCallback(() => {
+        gameState.takeCard();
+    }, [gameState]);
+
     const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
 
     return <div class={css.gameContainer}>
@@ -40,12 +48,15 @@ export function GameElement({
         }   
 
         {
-            gameState.stack.hasCards ? <CardElement gameState={gameState} card={gameState.stack.card} /> : <div class={css.emptyStack}><span>X</span></div>
+            gameState.stack.hasCards ? <CardElement onClick={onStackClick} gameState={gameState} card={gameState.stack.card} /> : <div class={css.emptyStack}><span>X</span></div>
         }   
 
         {
             gameState.players.map(p => 
-                p.cards?.map(c => <CardElement gameState={gameState} isMine={p.guid === gameState.myPlayerGuid} card={c} />)
+                p.cards?.map(c => {
+                    const isMine = p.guid === gameState.myPlayerGuid;
+                    return <CardElement gameState={gameState} isMine={isMine} onClick={isMine ? () => onMyCardClick(c) : null} card={c} />;
+                })
             )
         }
 
@@ -69,7 +80,13 @@ export function GameElement({
 
         <div class={`${css.overlay} ${gameState.status === GameStatus.finished ? css.visible : ''}`}>
             <span class={css.title}>HOERA!</span>
-            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende level</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+            {
+                gameState.winner ? [
+                    <span class={css.title} style={{color:gameState.winner.color}}>{gameState.winner.name}</span>,
+                    <span class={css.title}>heeft gewonnen</span>
+                 ] : null
+            }
+            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende spel</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
         </div>
     </div>;
 }

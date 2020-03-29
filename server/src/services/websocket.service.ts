@@ -1,6 +1,5 @@
 import { GameService } from './game.service';
 import { Turn } from 'models/turn.model';
-import { Player } from 'models/player.model';
 import { Room } from 'models/room.model';
 
 const WebSocket = require('ws');
@@ -15,7 +14,8 @@ export enum GameAction {
     Gameover = 'gameover',
     Finished = 'finished',
     PlayerLeft = 'player-left',
-    NextGame = 'next-game'
+    NextGame = 'next-game',
+    TakeCards = 'take-cards'
 }
 export class WebsocketService {
     private wssGame;
@@ -55,13 +55,12 @@ export class WebsocketService {
                     case GameAction.NextGame:
                         self.gameService.nextGame(this.playerGuid);
                         break;
+                    case GameAction.TakeCards:
+                        self.gameService.takeCards(this.playerGuid);
+                        break;
                 }
 
                 if (turn.action === "effect-response") {
-                    
-                }
-
-                if (turn.action === "take-cards") {
                     
                 }
             });

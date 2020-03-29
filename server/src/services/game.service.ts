@@ -31,6 +31,7 @@ export class GameService {
         instance.onStart = this.onGameStarted.bind(this);
         instance.onNextPlayer = this.onNextPlayer.bind(this);
         instance.onPlayCard = this.onPlayCard.bind(this);
+        instance.onTakeCards = this.onTakeCards.bind(this);
         instance.onEffect = this.onEffect.bind(this);
         instance.onGameover = this.onGameover.bind(this);
         instance.onFinish = this.onFinish.bind(this);
@@ -55,6 +56,11 @@ export class GameService {
     public playCard(playerGuid: string, cardGuid: string) {
         const room = this.getRoomByPlayerGuid(playerGuid);
         room.game.playCard(playerGuid, cardGuid);
+    }
+
+    public takeCards(playerGuid: string){
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        room.game.takeCards(playerGuid);
     }
 
     public nextGame(playerGuid: string) {
@@ -101,10 +107,11 @@ export class GameService {
         return this.roomService.getRooms().find(r => r.players.some(p => p.guid === playerGuid));
     }
 
-    public onGameStarted(game: GameLogic) {
+    public onGameStarted(game: GameLogic, hasStack: boolean) {
         const room = this.roomService.getRoomByGame(game);
         this.websocketService.sendMessageToRoom(room, GameAction.Start, {
-            players: room.game.players
+            players: room.game.players,
+            hasStack
         });
     }
 
@@ -121,12 +128,31 @@ export class GameService {
         });
     }
 
+    public onTakeCards(game: GameLogic, playerGuid: string, cards: Card[], hasStack: boolean) {
+        this.sendMessageToRoom(game, GameAction.TakeCards, {
+            playerGuid,
+            hasStack,
+            cards: cards.map(c => {
+                const result = new Card();
+                result.guid = c.guid;
+                return result;
+            })
+        }, [playerGuid]);
+        this.websocketService.sendMessageToPlayer(playerGuid, GameAction.TakeCards, {
+            playerGuid,
+            hasStack,
+            cards
+        });
+    }
+
     public onGameover(game: GameLogic) {
         this.sendMessageToRoom(game, GameAction.Gameover);
     }
 
-    public onFinish(game: GameLogic) {
-        this.sendMessageToRoom(game, GameAction.Finished);
+    public onFinish(game: GameLogic, playerGuid?: string) {
+        this.sendMessageToRoom(game, GameAction.Finished, {
+            playerGuid
+        });
     }
 
     public onEffect(game: GameLogic, gameEffect: GameEffect) {

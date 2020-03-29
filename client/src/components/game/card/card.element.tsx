@@ -8,17 +8,15 @@ const css = require('./card.element.scss');
 export function CardElement({
     card,
     isMine,
-    gameState
+    gameState,
+    onClick
 }: {
     card: Card;
     isMine?: boolean;
     gameState: GameState;
+    onClick?;
 }) {
-    const onClick = useCallback(() => {
-        gameState.playCard(card);
-    }, [card]);
-
-    return <div class={`${css.cardContainer} ${isMine ? css.clickable : ''} ${gameState.status === GameStatus.cleanup ? css.cleanup : ''}`} onClick={isMine ? onClick : null} style={{transformOrigin: `${card.originX}px ${card.originY}px`, transform: `translate(${card.positionX + card.adjustmentX}px, ${card.positionY  + card.adjustmentY}px) rotate(${card.degrees || '0'}deg)`}}>
+    return <div class={`${css.cardContainer} ${isMine ? css.clickable : ''} ${gameState.status === GameStatus.cleanup ? css.cleanup : ''}`} onClick={onClick} style={{transformOrigin: `${card.originX}px ${card.originY}px`, transform: `translate(${card.positionX + card.adjustmentX}px, ${card.positionY  + card.adjustmentY}px) rotate(${card.degrees || '0'}deg)`}}>
         <div class={css.scaler}>
             <div class={`${css.card} ${isMine ? css.clickable : ''}`} style={{transform: `rotate${card.rotationAxis}(${card.rotation}deg)`}}>
                 <div class={`${css.front} ${css.face}`}>

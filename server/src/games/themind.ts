@@ -5,6 +5,7 @@ export class TheMind extends GameLogic {
     private level = 1;
     private isGameOver = false;
     protected startCardAmountInHand = 1;
+    protected hasPile = false;
 
     public playCard(playerGuid: string, cardGuid: string) {
         if (this.isGameOver) {
@@ -22,16 +23,20 @@ export class TheMind extends GameLogic {
             return;
         }
 
-        this.cardsOnStack.push(card);
+        this.cardsOnPile.push(card);
 
         if (this.players.every(p => p.cards.length === 0)) {
             this.onFinish(this);
         }
     }
 
+    public takeCards() {
+
+    }
+
     public isValidCard(cardGuid: string) {
         const cardsInCurrentGame = TheMind.cards.filter(c => !this.cardsToUse.some(ctu => ctu.guid == c.guid));
-        const nextCard = cardsInCurrentGame.find(c => !this.cardsOnStack.some(ctu => ctu.guid === c.guid));
+        const nextCard = cardsInCurrentGame.find(c => !this.cardsOnPile.some(ctu => ctu.guid === c.guid));
         return nextCard.guid == cardGuid;
     }
 
@@ -54,7 +59,7 @@ export class TheMind extends GameLogic {
             this.startCardAmountInHand = 1;
         }
         this.cardsToUse = JSON.parse(JSON.stringify(TheMind.cards));
-        this.cardsOnStack = [];
+        this.cardsOnPile = [];
     }
 
     private static cards: Card[] = [

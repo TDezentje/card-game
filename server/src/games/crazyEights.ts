@@ -2,44 +2,10 @@ import { Card } from 'models/card.model';
 import { GameLogic, GamePlayer, GameEffect, GameEffectType } from './game.logic';
 import { Player } from 'models/player.model';
 
-/*
-const valid: boolean = this.games.find(g => g.id === room.game.name).isValidCard(cardGuid, room.game.cardsOnStack, room.game.cardsToUse);
-if (!valid.isValid) {
-    gameState.data.gameOver = !room.game.allowInvalidMoves;
-    gameState.data.isValid = false;
-} else {
-    if (room.game.turnBased) {
-        let currentPlayerIdx = room.players.findIndex(p => p.guid === room.nextPlayer.guid);
-        if(valid?.rotationChanged){
-            room.game.rotationClockwise = !room.game.rotationClockwise;
-        }
-        if(room.game.rotationClockwise) {
-            currentPlayerIdx++;
-            if (currentPlayerIdx === room.players.length) {
-                currentPlayerIdx = 0;
-            }
-        } else {
-            currentPlayerIdx--;
-            if (currentPlayerIdx < 0) {
-                currentPlayerIdx = room.players.length - 1;
-            }
-        }
-        room.nextPlayer = room.players[currentPlayerIdx];
-        gameState.data.nextPlayerGuid = room.nextPlayer.guid;
-        gameState.data.rotationClockwise = room.game.rotationClockwise;
-    }
-
-    if (valid?.addCardsToNextPlayer > 0) {
-        this.getNewCardsInHand(room, room.nextPlayer, valid.addCardsToNextPlayer);
-    }
-}
-room.game.gameOver = gameState.data.gameOver;
-if (gameState.data.isValid) {
-    room.game.cardsOnStack.push(card);
-    return new GameResponse();
-}*/
 export class CrazyEights extends GameLogic {
     private _currentPlayer: GamePlayer;
+    protected hasPile = true;
+
     private get currentPlayer() {
         return this._currentPlayer;
     }
@@ -71,6 +37,23 @@ export class CrazyEights extends GameLogic {
         this.rotationClockwise = true;
     }
 
+    public takeCards(playerGuid: string) {
+        if (playerGuid !== this.currentPlayer?.guid) {
+            return;
+        }
+
+        const randomIdx = Math.floor(Math.random() * Math.floor(this.cardsToUse.length));
+        const card = this.cardsToUse.splice(randomIdx, 1);
+        this.currentPlayer.cards.push(...card);
+        this.currentPlayer = this.getNextPlayer(1);  
+        this.onTakeCards(this, playerGuid, card, this.cardsToUse.length !== 0);   
+        if (card.length > 0 && this.cardsOnPile.length > 0 && this.cardsToUse.length === 0) {
+            this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
+            this.cardsOnPile = [];
+            this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
+        }   
+    }
+
     public playCard(playerGuid: string, cardGuid: string) {
         if (playerGuid !== this.currentPlayer.guid) {
             return;
@@ -81,32 +64,69 @@ export class CrazyEights extends GameLogic {
             return;
         }
 
-        this.cardsOnStack.push(card);
+        this.cardsOnPile.push(card);
         this.takeCardFromHand(cardGuid);
         
-        let currentPlayerIdx = this.players.findIndex(p => p.guid === this.currentPlayer.guid);
-        if(this.rotationClockwise) {
-            currentPlayerIdx++;
-            if (currentPlayerIdx === this.players.length) {
-                currentPlayerIdx = 0;
-            }
-        } else {
-            currentPlayerIdx--;
-            if (currentPlayerIdx < 0) {
-                currentPlayerIdx = this.players.length - 1;
-            }
-        }
-        this.currentPlayer = this.players[currentPlayerIdx];
+        const previousPlayer = this.currentPlayer;
+        this.checkEffects(card);
         this.onPlayCard(this, playerGuid, card);
 
+        if (previousPlayer.cards.length === 0) {
+            this.onFinish(this, previousPlayer.guid);
+        }
+
+        if (this.cardsOnPile.length > 5 && this.cardsToUse.length === 0) {
+            this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
+            this.cardsOnPile = [];
+            this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
+        }   
     }
 
+    private checkEffects(card: Card) {
+        if (card.corner.leftTop === 'A') {
+            this.rotationClockwise = !this.rotationClockwise;
+        }
+
+        if (card.corner.leftTop === '8') {
+            const skippedPlayer = this.getNextPlayer(1);
+            this.currentPlayer = this.getNextPlayer(2);
+            this.onEffect(this, new GameEffect(GameEffectType.PlayerSkipped, {
+                playerGuid: skippedPlayer.guid
+            }));
+            return;
+        }
+
+        if (card.corner.leftTop === '7') {
+            this.currentPlayer = this.getNextPlayer(0);
+            return
+        }
+
+        this.currentPlayer = this.getNextPlayer(1);
+    }
+
+    private getNextPlayer(stepCount: number){
+        let currentPlayerIdx = this.players.findIndex(p => p.guid === this.currentPlayer.guid);
+        if(this.rotationClockwise) {
+            currentPlayerIdx +=stepCount;
+            if (currentPlayerIdx >= this.players.length) {
+                currentPlayerIdx = currentPlayerIdx % this.players.length;
+            }
+        } else {
+            const idx = 0 - (currentPlayerIdx - stepCount);
+            currentPlayerIdx -= stepCount;
+            if (currentPlayerIdx < 0) {
+                currentPlayerIdx = this.players.length - idx;
+            }
+        }
+        return this.players[currentPlayerIdx];
+    } 
+
     protected isValidCard(card: Card) {
-        const lastCardIdx = this.cardsOnStack.length - 1;
+        const lastCardIdx = this.cardsOnPile.length - 1;
         if (lastCardIdx === -1) {
             return true;
         }
-        const lastPlayedCard = this.cardsOnStack[lastCardIdx];
+        const lastPlayedCard = this.cardsOnPile[lastCardIdx];
 
         // Same type of card or same display of card
         if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom ||
@@ -130,7 +150,7 @@ export class CrazyEights extends GameLogic {
 
     public resetGame() {
         this.cardsToUse = JSON.parse(JSON.stringify(CrazyEights.cards));
-        this.cardsOnStack = [];
+        this.cardsOnPile = [];
     }
 
     private static cards: Card[] = [

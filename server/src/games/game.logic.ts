@@ -3,10 +3,12 @@ import { Player } from 'models/player.model';
 
 export enum GameEffectType {
     RotationChanged = 'rotation-changed',
+    PlayerSkipped = 'player-skipped',
+    ResetPile = 'reset-pile'
 }
 
 export class GameEffect {
-    public constructor(public type: GameEffectType, public effectData: any) {
+    public constructor(public type: GameEffectType, public effectData?: any) {
 
     }
 }
@@ -24,12 +26,14 @@ export abstract class GameLogic {
     public maxPlayers?: number;
     public players: GamePlayer[];
     protected startCardAmountInHand;
+    protected hasPile: boolean;
     protected cardsToUse?: Card[];
-    protected cardsOnStack?: Card[];
+    protected cardsOnPile?: Card[];
 
     public abstract nextGame();
     public abstract resetGame();
     public abstract playCard(_playerGuid: string, cardGuid: string);
+    public abstract takeCards(_playerGuid: string);
     
     public startGame(players: Player[]) {
         this.resetGame();
@@ -44,7 +48,7 @@ export abstract class GameLogic {
             }    
         }
         
-        this.onStart(this);
+        this.onStart(this, this.hasPile);
     }
     
     public leaveGame(playerGuid: string) {
@@ -64,10 +68,11 @@ export abstract class GameLogic {
         }
     }
 
-    public onStart: (game: GameLogic) => void;
+    public onStart: (game: GameLogic, hasStack: boolean) => void;
     public onPlayCard: (game: GameLogic, playerGuid: string, card: Card) => void;
+    public onTakeCards: (game: GameLogic, playerGuid: string, card: Card[], hasStack: boolean) => void;
     public onGameover: (game: GameLogic) => void;
-    public onFinish: (game: GameLogic) => void;
+    public onFinish: (game: GameLogic, playerGuid?: string) => void;
     public onNextPlayer: (game: GameLogic, playerGuid: string) => void;
     public onEffect: (game: GameLogic, gameEffect: GameEffect) => void;
     public onPlayerLeft: (game: GameLogic, playerGuid: string) => void;

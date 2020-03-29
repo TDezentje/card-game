@@ -30,6 +30,7 @@ export class GameState {
     public status: GameStatus;
     public rotation: GameRotation = GameRotation.None;
 
+    public winner: Player;
     public table: Table;
     public websocket = new WebSocket("ws://" + location.hostname + ':8001');
     public afterTick: () => void;
@@ -94,6 +95,12 @@ export class GameState {
         }));
     }
 
+    public takeCard() {
+        this.websocket.send(JSON.stringify({
+            action: 'take-cards'
+        }));
+    }
+
     private onWebsocketMessage(event) {
         const data = JSON.parse(event.data);
         console.log(data);
@@ -116,6 +123,9 @@ export class GameState {
             case 'next-player':
                 this.handleNextPlayer(data.actionData);
                 break;
+            case 'take-cards':
+                this.handleTakeCards(data.actionData);
+                break;
             case 'effect':
                 this.handleEffect(data.actionData);
                 break;
@@ -123,7 +133,7 @@ export class GameState {
                 this.handleGameOver();
                 break;
             case 'finished':
-                this.handleFinished();
+                this.handleFinished(data.actionData);
                 break;
         }
     }
@@ -152,6 +162,7 @@ export class GameState {
         this.status = GameStatus.running;
         this.pile.cards = [];
         this.stack.hasCards = true;
+        this.winner;
         
         this.players = data.players.map(p => {
             p = JSON.parse(JSON.stringify(p));
@@ -161,33 +172,38 @@ export class GameState {
         
         for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
             for (const p of data.players) {
-                const promise = sleep(50);
+                await sleep(50);
                 
-                let card: Card = p.cards[i];
+                const card: Card = p.cards[i];
                 if (!card) {
                     continue;
                 }
-                card = new Card(card);
-                
-                card.positionX = this.stack.card.positionX;
-                card.positionY = this.stack.card.positionY;
-                card.originX = this.stack.card.originX;
-                card.originY = this.stack.card.originY;
-                card.rotation = this.stack.card.rotation;
-                card.rotationAxis = 'Y';
-                card.degrees = this.stack.card.degrees;
-                card.adjustmentX = this.stack.card.adjustmentX;
-                card.adjustmentY = this.stack.card.adjustmentY;
-                
-                card.futureAdjustmentX = 0;
-                card.futureAdjustmentY = 0;
-                
-                const player = this.players.find(p2 => p.guid === p2.guid);
-                player.cards.push(card);
-                
-                await promise;
+
+                this.addCardToPlayerFromStack(p.guid, card);
+
             };
         }
+        this.stack.hasCards = data.hasStack;
+    }
+
+    private addCardToPlayerFromStack(playerGuid: string, card: any) {
+        card = new Card(card);
+
+        card.positionX = this.stack.card.positionX;
+        card.positionY = this.stack.card.positionY;
+        card.originX = this.stack.card.originX;
+        card.originY = this.stack.card.originY;
+        card.rotation = this.stack.card.rotation;
+        card.rotationAxis = 'Y';
+        card.degrees = this.stack.card.degrees;
+        card.adjustmentX = this.stack.card.adjustmentX;
+        card.adjustmentY = this.stack.card.adjustmentY;
+        
+        card.futureAdjustmentX = 0;
+        card.futureAdjustmentY = 0;
+        
+        const player = this.players.find(p => playerGuid === p.guid);
+        player.cards.push(card);
     }
 
     private handlePlay(data) {
@@ -200,12 +216,18 @@ export class GameState {
         card.color = data.card.color;
         player.cards.splice(cardIndex, 1);
         this.pile.addCard(card);
-
     }
 
     private handleNextPlayer(data) {
         this.currentPlayerGuid = data.playerGuid;
     } 
+
+    public handleTakeCards(data) {
+        for (const card of data.cards) {
+            this.addCardToPlayerFromStack(data.playerGuid, card);
+            this.stack.hasCards = data.hasStack;
+        }
+    }
 
     private handleGameOver() {
         setTimeout(() => {
@@ -214,10 +236,11 @@ export class GameState {
         }, 600);
     }
 
-    private handleFinished() {
+    private handleFinished(data) {
         setTimeout(() => {
             this.status = GameStatus.finished;
             this.rotation = GameRotation.None;
+            this.winner = this.players.find(p => p.guid === data?.playerGuid);
         }, 600);
     }
 
@@ -225,6 +248,9 @@ export class GameState {
         switch (data.type) {
             case 'rotation-changed':
                 this.handleEffectRotationChanged(data.effectData);
+                break;
+            case 'reset-pile':
+                this.handleResetPile();
                 break;
         }
     }
@@ -236,6 +262,15 @@ export class GameState {
             this.rotation = GameRotation.counterClockwise;
         } else {
             this.rotation = GameRotation.None;
+        }
+    }
+
+    private async handleResetPile() {
+        const succeeded = this.pile.resetCardsToStack(this.stack);
+
+        if (succeeded) {
+            await sleep(50);
+            this.stack.hasCards = true;
         }
     }
 }

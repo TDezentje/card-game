@@ -5,10 +5,6 @@ export class CardStack {
     public hasCards: boolean;
     public card: Card = new Card();
 
-    public constructor() {
-        this.hasCards = true;
-    }
-
     public tick(screenSize: ScreenSize) {
         this.card.positionX = screenSize.width - CARD_WIDTH - 10;
         this.card.positionY = screenSize.height - CARD_HEIGHT - 10;

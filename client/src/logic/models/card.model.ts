@@ -27,6 +27,7 @@ export class Card {
     public futureOriginY?: number;
 
     public isCleaning = false;
+    public isResetting = false;
 
     public constructor(obj?) {
         Object.assign(this, obj);
