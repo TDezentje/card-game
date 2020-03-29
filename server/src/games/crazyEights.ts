@@ -18,9 +18,14 @@ export class CrazyEights extends GameLogic {
         if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom ||
             lastPlayedCard.corner.leftTop === card.corner.leftTop ||
             lastPlayedCard.display === card.display) {
+            let addCardsToNextPlayer = 0;
+            if (card.display === '2') {
+                addCardsToNextPlayer = parseInt(card.display);
+            }
+
             return {
                 isValid: true,
-                addCardsToNextPlayer: 0
+                addCardsToNextPlayer: addCardsToNextPlayer
             };
         }
 
