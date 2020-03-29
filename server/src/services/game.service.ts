@@ -19,7 +19,7 @@ export class GameService {
 
     public loadGames() {
         this.games = [];
-        // this.games.push(TheMind);
+        this.games.push(TheMind);
         this.games.push(CrazyEights);
     }
 

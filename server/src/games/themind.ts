@@ -33,7 +33,7 @@ export class TheMind extends GameLogic {
     public takeCards() {
 
     }
-    
+
     public answerMultipleChoice() {
 
     }
