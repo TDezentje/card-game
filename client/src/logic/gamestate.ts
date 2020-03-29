@@ -4,6 +4,8 @@ import { CardPile } from './models/card-pile.model';
 import { Table } from './models/table.model';
 import { Card } from './models/card.model';
 import { sleep } from './helpers/animation.helper';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { faSyncAlt, faBan } from '@fortawesome/free-solid-svg-icons';
 
 export enum GameStatus {
     started,
@@ -24,6 +26,12 @@ interface MultipleChoice {
     playerGuid: string;
 }
 
+interface EffectIndicator {
+    icon: IconDefinition;
+    visible: boolean;
+    playerPositionDegrees: number;
+}
+
 export class GameState {
     public players: Player[];
     public myPlayerGuid: string;
@@ -41,6 +49,7 @@ export class GameState {
     public afterTick: () => void;
 
     public activeMultipleChoice: MultipleChoice;
+    public activeEffectIndicator: EffectIndicator;
 
     private lastTick = 0;
 
@@ -276,13 +285,20 @@ export class GameState {
             case 'reset-pile':
                 this.handleResetPile();
                 break;
+            case 'player-skipped':
+                this.handlePlayerSkipped(data.effectData);
+                break;
             case 'multiple-choice':
                 this.handleMultipleChoice(data.effectData, data.playerGuid);
                 break;
         }
     }
 
-    private handleEffectRotationChanged(data) {
+    private async handleEffectRotationChanged(data) {
+        if (data.rotationClockwise !== undefined && this.rotation !== GameRotation.None) {
+            await this.applyEffectIdenticator(faSyncAlt);
+        }
+
         if (data.rotationClockwise) {
             this.rotation = GameRotation.Clockwise;
         } else if (data.rotationClockwise === false) {
@@ -306,5 +322,30 @@ export class GameState {
             options: data.options,
             playerGuid
         };
+    }
+
+    private handlePlayerSkipped(data) {
+        this.applyEffectIdenticator(faBan, data.playerGuid);
+    }
+
+    private async applyEffectIdenticator(icon: IconDefinition, playerGuid?: string) {
+        await sleep(400);
+        let playerPositionDegrees;
+        
+        if(playerGuid) {
+            const player = this.players.find(p => p.guid === playerGuid);
+            playerPositionDegrees = player.degrees;
+        }
+
+        this.activeEffectIndicator = {
+            icon,
+            visible: true,
+            playerPositionDegrees
+        };
+
+        setTimeout(async () => {
+            this.activeEffectIndicator.visible = false;
+        }, 1400);
+        await sleep(500);
     }
 }

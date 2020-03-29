@@ -1,7 +1,6 @@
 import { h } from 'preact';
 import { Card } from 'logic/models/card.model';
 import { GameState, GameStatus } from 'logic/gamestate';
-import { useCallback } from 'preact/hooks';
 
 const css = require('./card.element.scss');
 

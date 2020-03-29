@@ -312,3 +312,67 @@
         font-size: 80px;
     }
 }
+
+.effectIndicatorContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    pointer-events: none;
+}
+
+.effectIndicator {
+    width: 60%;
+    height: 60%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%) scale(0) rotate(80deg);
+    color: white;
+    padding: 20px;
+    border-radius: 50%;
+    font-size: 13rem;
+    background: radial-gradient(rgba(0, 0, 0, .26) 0%, rgba(0, 0, 0, .26) 30%, transparent 90%, transparent 100%);
+    transition: opacity .4s cubic-bezier(0.4, 0.0, 0.2, 1), transform .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    opacity: 0;
+    backdrop-filter: blur(5px);
+
+    &.visible {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    .arrowContainer {
+        width: 90%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        justify-content: flex-end;
+        transform-origin: center;
+    }
+
+    .arrow {
+        border: 30px solid transparent;
+        border-left-color: white;
+        animation: bounce .8s ease-in-out;
+        animation-iteration-count: infinite;
+    }
+
+    .arrow,
+    svg {
+        opacity: .9;
+    }
+}
+
+@keyframes bounce {
+    0% {
+        transform: translateX(8px);
+    }
+    50% {
+        transform: translateX(-8px);
+    }
+    100% {
+        transform: translateX(8px);
+    }
+}

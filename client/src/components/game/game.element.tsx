@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { GameState, GameStatus } from 'logic/gamestate';
 import { CardElement } from './card/card.element';
 import { useCallback } from 'preact/hooks';
+import { IconElement } from './icon/icon.element';
 
 const css = require('./game.element.scss');
 
@@ -75,7 +76,21 @@ export function GameElement({
         {
             gameState.status === GameStatus.started && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
         }
-   
+
+        <div class={css.effectIndicatorContainer} style={{width: gameState.table.size, height: gameState.table.size}}>
+            <div class={`${css.effectIndicator} ${gameState.activeEffectIndicator?.visible ? css.visible : ''}`}>
+                <IconElement icon={gameState.activeEffectIndicator?.icon} />
+
+                {
+                    gameState.activeEffectIndicator?.playerPositionDegrees !== undefined ? 
+                        <div class={css.arrowContainer} style={{transform: `translate(-50%, -50%) rotate(${gameState.activeEffectIndicator.playerPositionDegrees}deg)`}}>
+                            <div class={css.arrow} />
+                        </div> : null
+                }
+                
+            </div>
+        </div>
+
 
         <div class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
             <span class={css.title}>GAME OVER!</span>

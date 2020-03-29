@@ -34,15 +34,15 @@ export class Card {
     }
 
     public tick(deltaT) {
-        this.positionX = getTweenValue(this.positionX, this.futurePositionX, deltaT, 6);
-        this.positionY = getTweenValue(this.positionY, this.futurePositionY, deltaT, 6);
-        this.adjustmentX = getTweenValue(this.adjustmentX, this.futureAdjustmentX, deltaT, 6);
-        this.adjustmentY = getTweenValue(this.adjustmentY, this.futureAdjustmentY, deltaT, 6);
+        this.positionX = getTweenValue(this.positionX, this.futurePositionX, deltaT, 7);
+        this.positionY = getTweenValue(this.positionY, this.futurePositionY, deltaT, 7);
+        this.adjustmentX = getTweenValue(this.adjustmentX, this.futureAdjustmentX, deltaT, 7);
+        this.adjustmentY = getTweenValue(this.adjustmentY, this.futureAdjustmentY, deltaT, 7);
 
-        this.rotation = getTweenValue(this.rotation, this.futureRotation, deltaT, 4);
-        this.originX = getTweenValue(this.originX, this.futureOriginX, deltaT, 5);
-        this.originY = getTweenValue(this.originY, this.futureOriginY, deltaT, 5);
-        this.degrees = getTweenValue(this.degrees, this.futureDegrees, deltaT, 5);
+        this.rotation = getTweenValue(this.rotation, this.futureRotation, deltaT, 5);
+        this.originX = getTweenValue(this.originX, this.futureOriginX, deltaT, 6);
+        this.originY = getTweenValue(this.originY, this.futureOriginY, deltaT, 6);
+        this.degrees = getTweenValue(this.degrees, this.futureDegrees, deltaT, 6);
     }
 }
 
