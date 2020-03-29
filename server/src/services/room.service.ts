@@ -32,22 +32,19 @@ export class RoomService {
         return oldRoom;
     }
 
-    public deleteRoom(roomGuid: string) {
-        const idx = this.getRooms().findIndex(r => r.guid === roomGuid);
-        this.getRooms().splice(idx, 1);
-    }
-
     public addUserToRoom(roomGuid: string, player: Player) {
-        this.rooms[roomGuid].players.push(player);
-        if(this.rooms[roomGuid].game.maxPlayer){
-            if(this.rooms[roomGuid].players.length >= this.rooms[roomGuid].game.maxPlayer){
-                this.rooms[roomGuid].isStarted = true;
+        const room = this.getRoom(roomGuid);
+        room.players.push(player);
+        if(room.game.maxPlayer){
+            if(room.players.length >= room.game.maxPlayer){
+                room.isStarted = true;
             }
         }
     }
 
     public deleteUserFromRoom(roomGuid: string, player: Player) {
-        const id = this.rooms[roomGuid].players.findIndex(p => p.guid === player.guid);
-        this.rooms[roomGuid].players.splice(id, 1);
+        const room = this.getRoom(roomGuid);
+        const id = room.players.findIndex(p => p.guid === player.guid);
+        room.players.splice(id, 1);
     }
 }
