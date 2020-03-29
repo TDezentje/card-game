@@ -6,6 +6,7 @@ import { RoomService } from './room.service';
 import { GameState } from 'models/gamestate.model';
 import { GameLogic } from 'games/game.logic';
 import { Room } from 'models/room.model';
+import { Valid } from 'models/valid.model';
 
 export class GameService {
     private games: GameLogic[] = [];
@@ -14,10 +15,10 @@ export class GameService {
 
     public loadGames() {
         this.games = [];
-        const theMind = new TheMind();
-        theMind.game.cardsToUse = JSON.parse(JSON.stringify(theMind.game.cards));
-        theMind.game.cardsOnStack = [];
-        this.games.push(theMind);
+        // const theMind = new TheMind();
+        // theMind.game.cardsToUse = JSON.parse(JSON.stringify(theMind.game.cards));
+        // theMind.game.cardsOnStack = [];
+        // this.games.push(theMind);
         const crazyEights = new CrazyEights();
         crazyEights.game.cardsToUse = JSON.parse(JSON.stringify(crazyEights.game.cards));
         crazyEights.game.cardsOnStack = [];
@@ -37,7 +38,8 @@ export class GameService {
             gameState.action = "start";
 
             for (const player of room.players) {
-                this.getNewCardsInHand(room, player);
+                player.cards = [];
+                this.getNewCardsInHand(room, player, room.game.numberOfCardsInHand);
             }
 
             if (room.game.turnBased) {
@@ -111,9 +113,8 @@ export class GameService {
         return JSON.parse(JSON.stringify(this.games[idx].game));
     }
 
-    public getNewCardsInHand(room: Room, player: Player) {
-        player.cards = [];
-        for (let idx = 0; idx < room.game.numberOfCardsInHand; idx++) {
+    public getNewCardsInHand(room: Room, player: Player, numberOfCardsToAdd: number) {
+        for (let idx = 0; idx < numberOfCardsToAdd; idx++) {
             const randomIdx = Math.floor(Math.random() * Math.floor(room.game.cardsToUse.length));
             const card = room.game.cardsToUse.splice(randomIdx, 1);
             player.cards.push(...card);
@@ -136,18 +137,23 @@ export class GameService {
             card: card,
             cardGuid: cardGuid
         };
-        if (!this.games.find(g => g.id === room.game.name).isValidCard(cardGuid, room.game.cardsOnStack, room.game.cardsToUse)) {
+        const valid: Valid = this.games.find(g => g.id === room.game.name).isValidCard(cardGuid, room.game.cardsOnStack, room.game.cardsToUse);
+        if (!valid.isValid) {
             gameState.data.gameOver = !room.game.allowInvalidMoves;
             gameState.data.isValid = false;
-        }
-        if (room.game.turnBased) {
-            let currentPlayerIdx = room.players.findIndex(p => p.guid === room.nextPlayer.guid);
-            currentPlayerIdx++;
-            if (currentPlayerIdx === room.players.length) {
-                currentPlayerIdx = 0;
+        } else {
+            if (room.game.turnBased) {
+                let currentPlayerIdx = room.players.findIndex(p => p.guid === room.nextPlayer.guid);
+                currentPlayerIdx++;
+                if (currentPlayerIdx === room.players.length) {
+                    currentPlayerIdx = 0;
+                }
+                room.nextPlayer = room.players[currentPlayerIdx];
+                gameState.data.nextPlayerGuid = room.nextPlayer.guid;
             }
-            room.nextPlayer = room.players[currentPlayerIdx];
-            gameState.data.nextPlayerGuid = room.nextPlayer.guid;
+            if (valid?.addCardsToNextPlayer > 0) {
+                this.getNewCardsInHand(room, room.nextPlayer, valid.addCardsToNextPlayer);
+            }
         }
         room.game.gameOver = gameState.data.gameOver;
         if (gameState.data.isValid) {

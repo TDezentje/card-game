@@ -7,7 +7,10 @@ export class CrazyEights extends GameLogic {
         const card: Card = this.game.cards.find(c => c.guid == cardGuid);
         const lastCardIdx = cardsOnStack.length - 1;
         if (lastCardIdx === -1) {
-            return true;
+            return {
+                isValid: true,
+                addCardsToNextPlayer: 0
+            };
         }
         const lastPlayedCard = cardsOnStack[lastCardIdx];
 
@@ -15,10 +18,24 @@ export class CrazyEights extends GameLogic {
         if (lastPlayedCard.corner.leftBottom === card.corner.leftBottom ||
             lastPlayedCard.corner.leftTop === card.corner.leftTop ||
             lastPlayedCard.display === card.display) {
-            return true;
+            return {
+                isValid: true,
+                addCardsToNextPlayer: 0
+            };
         }
 
-        return false;
+        // Card is joker
+        if (card.corner.leftTop === '✪' || lastPlayedCard.corner.leftTop === '✪') {
+            return {
+                isValid: true,
+                addCardsToNextPlayer: 5
+            };
+        }
+
+        return {
+            isValid: false,
+            addCardsToNextPlayer: 0
+        };
     }
 
     public nextLevel(game) {
@@ -350,12 +367,12 @@ export class CrazyEights extends GameLogic {
                 },
                 {
                     guid: '9cfe88eb-0cc2-419a-8284-3178095252dc',
-                    display: 'Joker',
+                    display: '🤹',
                     corner: { leftTop: '✪', leftBottom: '✪', rightTop: '✪', rightBottom: '✪' }
                 },
                 {
                     guid: 'c21dea09-4ca1-4f1d-a1e9-5917d07aad49',
-                    display: 'Joker',
+                    display: '🤹',
                     corner: { leftTop: '✪', leftBottom: '✪', rightTop: '✪', rightBottom: '✪' }
                 }
             ]
