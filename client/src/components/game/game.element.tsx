@@ -30,7 +30,7 @@ export function GameElement({
         </div>
 
         {
-            me && <div class={css.hud} style={{ borderColor: me.color }}>
+            me && <div class={`${css.hud} ${gameState.currentPlayerGuid === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
                 <div style={{backgroundColor: me.color }} class={css.name}>{me.name}</div>
             </div>
         }
@@ -50,9 +50,11 @@ export function GameElement({
         }
 
         {
-            gameState.players.filter(p => p.guid !== gameState.myPlayerGuid).map(p => <p class={css.nameTag} style={{background: p.color, transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
-                {p.name}
-            </p>)
+            gameState.players.filter(p => p.guid !== gameState.myPlayerGuid).map(p => <div class={`${css.nameTag} ${gameState.currentPlayerGuid === p.guid ? css.active : ''}`} style={{transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
+                <div class={css.indicator} />
+                <div class={css.background} style={{background: p.color }} />
+                <span>{p.name}</span>
+            </div>)
         }
 
         {

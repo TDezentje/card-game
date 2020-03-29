@@ -79,7 +79,8 @@
     position: absolute;
     font-weight: bold;
     color: #323232;
-    font-size: .9rem;
+    font-size: 1.1rem;
+    transform-origin: center;
 }
 
 .middle {
@@ -97,6 +98,7 @@
 .bottomRight,
 .bottomLeft {
     bottom: 8px;
+    transform: rotate(180deg);
 }
 
 .topRight,

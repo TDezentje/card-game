@@ -24,7 +24,7 @@ export class Player {
         this.cards = [];
     }
 
-    public tick(deltaT: number, screenSize: ScreenSize, table: Table, index: number, playerCount: number, status: GameStatus) {
+    public tick(deltaT: number, screenSize: ScreenSize, table: Table, index: number, playerCount: number, status: GameStatus, myTurn: boolean) {
         const htmlDegrees = (360 / playerCount * index);
         this.futureDegrees = htmlDegrees + 90;
 
@@ -94,6 +94,10 @@ export class Player {
                 futureRotation = 0;
                 futurePositionX = (cardPositionX - 70) + (80 * distanceFromCenter);
                 futurePositionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
+
+                if (!myTurn) {
+                    futurePositionY += CARD_HEIGHT * .45;
+                }
             } else {
                 futureDegrees = htmlDegrees + (15 * distanceFromCenter);
                 futureRotation = 180;

@@ -1,123 +1,98 @@
 import { GameService } from './game.service';
 import { Turn } from 'models/turn.model';
-import { GameState } from 'models/gamestate.model';
 import { Player } from 'models/player.model';
+import { Room } from 'models/room.model';
 
 const WebSocket = require('ws');
 
+export enum GameAction {
+    Join = 'join',
+    PlayerJoined = 'player-joined',
+    Start = 'start',
+    NextPlayer = 'next-player',
+    Effect = 'effect',
+    Play = 'play',
+    Gameover = 'gameover',
+    Finished = 'finished',
+    PlayerLeft = 'player-left',
+    NextGame = 'next-game'
+}
 export class WebsocketService {
     private wssGame;
-    private gameService: GameService = new GameService();
+    private gameService: GameService;
+
+    public constructor() {
+        this.gameService = new GameService(this);
+    }
 
     public createWebserver() {
         this.gameService.loadGames();
-        this.gameService.createGame();
 
         this.wssGame = new WebSocket.Server({ port: 8001 });
         this.wssGame.on('connection', (ws) => {
             const result = this.gameService.joinGame();
             ws.isAlive = true;
-            ws.playerGuid = result.actionByPlayer.guid;
+            ws.playerGuid = result.player.guid;
+            ws.roomGuid = result.room.guid;
             ws.on('pong', () => ws.isAlive = true);
-            ws.send(JSON.stringify(result));
-
-            if (result.players.length > 1) {
-                result.action = "player-joined";
-                for (const player of result.players.filter(p => p.guid !== ws.playerGuid)) {
-                    this.sendMessageToPlayer(player.guid, this.prepareDataForSending(result, player));
-                }
-            }
+            ws.send(this.wrapMessage(GameAction.Join, {
+                player: result.player,
+                players: result.room.players
+            }));
 
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const self = this;
             ws.on('message', function (data) {
                 const turn: Turn = JSON.parse(data);
-                if (turn.action === "stop") {
-                    const result = self.gameService.stopGame(this.playerGuid);
-                    if (!result.isStarted) {
-                        for (const player of result.players) {
-                            self.sendMessageToPlayer(player.guid, self.prepareDataForSending(result, player));
-                        }
-                    } else {
-                        this.send(JSON.stringify(result));
-                    }
+
+                switch (turn.action) {
+                    case GameAction.Start:
+                        self.gameService.startGame(this.playerGuid);
+                        break;
+                    case GameAction.Play:
+                        self.gameService.playCard(this.playerGuid, turn.cardGuid);
+                        break;
+                    case GameAction.NextGame:
+                        self.gameService.nextGame(this.playerGuid);
+                        break;
                 }
 
-                if (turn.action === "start") {
-                    const result = self.gameService.startGame(this.playerGuid);
-
-                    if (result.isStarted) {
-                        for (const player of result.players) {
-                            self.sendMessageToPlayer(player.guid, self.prepareDataForSending(result, player));
-                        }
-                    }
-                }
-
-                if (turn.action === "join") {
-                    const result = self.gameService.joinGame();
-                    this.send(JSON.stringify(result));
+                if (turn.action === "effect-response") {
                     
-                    if (result.players.length > 1) {
-                        result.action = "player-joined";
-                        for (const player of result.players.filter(p => p.guid !== ws.playerGuid)) {
-                            self.sendMessageToPlayer(player.guid, self.prepareDataForSending(result, player));
-                        }
-                    }
                 }
 
-                if (turn.action === "next-game") {
-                    const result = self.gameService.resetGame(this.playerGuid);
-                    for (const player of result.players) {
-                        self.sendMessageToPlayer(player.guid, self.prepareDataForSending(result, player));
-                    }
-                }
-
-                if (turn.action === "play") {
-                    const result = self.gameService.playCard(this.playerGuid, turn.cardGuid);
-                    for (const player of result.players) {
-                        self.sendMessageToPlayer(player.guid, self.prepareDataForSending(result, player));
-
-                        if (result.data.gameOver) {
-                            const copyResult = self.prepareDataForSending(result, player);
-                            copyResult.action = "gameover";
-                            self.sendMessageToPlayer(player.guid, copyResult);
-                        }
-
-                        if (result.players.every(p => p.cards.length === 0)) {
-                            self.sendMessageToPlayer(player.guid, {
-                                action: "finished"
-                            });
-                        }
-
-                    }
+                if (turn.action === "take-cards") {
+                    
                 }
             });
 
             ws.on('close', function () {
-                const result = self.gameService.leaveGame(this.playerGuid);
-                for (const player of result.players.filter(p => p.guid !== ws.playerGuid)) {
-                    self.sendMessageToPlayer(player.guid, self.prepareDataForSending(result, player));
-                }
+                self.gameService.leaveGame(this.playerGuid);
             });
         });
     }
 
-    private sendMessageToPlayer(playerGuid: string, message) {
-        this.wssGame.clients.forEach(function each(client) {
+    public sendMessageToPlayer(playerGuid: string, action: GameAction, message: any) {
+        this.wssGame.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN && client.playerGuid === playerGuid) {
-                client.send(JSON.stringify(message));
+                client.send(this.wrapMessage(action, message));
             }
         });
     }
 
-    private prepareDataForSending(result: GameState, player: Player): GameState {
-        const copyResult: GameState = JSON.parse(JSON.stringify(result));
-        copyResult.players = JSON.parse(JSON.stringify(result.players)).map(p => {
-            if (p.cards && p.guid !== player.guid) {
-                p.cards = p.cards.map(c => ({ guid: c.guid }));
+    public sendMessageToRoom(room: Room, action: GameAction, message?: any, exceptPlayerGuids?: string[]) {
+        this.wssGame.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN && client.roomGuid === room.guid && 
+                (!exceptPlayerGuids || !exceptPlayerGuids.includes(client.playerGuid))) {
+                client.send(this.wrapMessage(action, message));
             }
-            return p;
         });
-        return copyResult;
+    }
+
+    private wrapMessage(action: GameAction, actionData?: any) {
+        return JSON.stringify({
+            action,
+            actionData
+        });
     }
 }

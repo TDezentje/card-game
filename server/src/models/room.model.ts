@@ -1,11 +1,10 @@
 import { Player } from './player.model';
-import { Game } from './game.model';
+import { GameLogic } from 'games/game.logic';
 
 export class Room {
     name: string;
     guid: string;
     isStarted: boolean;
     players: Player[];
-    nextPlayer?: Player;
-    game: Game;
+    game: GameLogic;
 }

@@ -16,13 +16,13 @@ export enum GameStatus {
 export enum GameRotation{
     None = 'none',
     Clockwise = 'clockwise',
-    AntiClockwise = 'antiClockwise',
+    counterClockwise = 'counterClockwise',
 }
 
 export class GameState {
     public players: Player[];
     public myPlayerGuid: string;
-    public nextPlayerGuid: string;
+    public currentPlayerGuid: string;
     public stack: CardStack;
     public pile: CardPile;
 
@@ -65,7 +65,7 @@ export class GameState {
             if (relativeIndex < 0) {
                 relativeIndex = this.players.length + relativeIndex;
             }
-            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length, this.status);
+            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid === this.myPlayerGuid);
         }
 
         this.afterTick?.();
@@ -73,7 +73,7 @@ export class GameState {
     }
 
     public playCard(card: Card) {
-        if (this.nextPlayerGuid && this.nextPlayerGuid !== this.myPlayerGuid) {
+        if (this.currentPlayerGuid && this.currentPlayerGuid !== this.myPlayerGuid) {
             return;
         }
         this.websocket.send(JSON.stringify({
@@ -99,19 +99,25 @@ export class GameState {
         console.log(data);
         switch (data.action) {
             case 'join':
-                this.handleJoin(data);
+                this.handleJoin(data.actionData);
                 break;
             case 'player-joined':
-                this.handlePlayerJoined(data);
+                this.handlePlayerJoined(data.actionData);
                 break;
             case 'player-left':
-                this.handlePlayerleft(data);
+                this.handlePlayerleft(data.actionData);
                 break;
             case 'start':
-                this.handleStart(data);
+                this.handleStart(data.actionData);
                 break;
-            case 'played':
-                this.handlePlay(data);
+            case 'play':
+                this.handlePlay(data.actionData);
+                break;
+            case 'next-player':
+                this.handleNextPlayer(data.actionData);
+                break;
+            case 'effect':
+                this.handleEffect(data.actionData);
                 break;
             case 'gameover':
                 this.handleGameOver();
@@ -123,106 +129,113 @@ export class GameState {
     }
 
     private handleJoin(data) {
-        this.myPlayerGuid = data.actionByPlayer.guid;
-        this.isAdmin = data.actionByPlayer.isAdmin;
+        this.myPlayerGuid = data.player.guid;
+        this.isAdmin = data.player.isAdmin;
         this.players = data.players.map(p => new Player(p));
         this.status = GameStatus.started;
     }
 
     private handlePlayerJoined(data) {
-        this.players.push(new Player(data.actionByPlayer));
+        this.players.push(new Player(data));
     }
 
     private handlePlayerleft(data) {
-        this.players.splice(this.players.findIndex(p => p.guid === data.actionByPlayer.guid), 1);
+        this.players.splice(this.players.findIndex(p => p.guid === data.playerGuid), 1);
     }
 
     private async handleStart(data) {
-        if (data.isStarted) {
-            if (this.status !== GameStatus.started) {
-                this.status = GameStatus.cleanup;
-                await sleep(800);
-            }
+        if (this.status !== GameStatus.started) {
+            this.status = GameStatus.cleanup;
+            await sleep(800);
+        }
 
-            this.status = GameStatus.running;
-            this.pile.cards = [];
-            this.stack.hasCards = true;
-            if (data.data && data.data.nextPlayerGuid) {
-                this.nextPlayerGuid = data.data.nextPlayerGuid;
-            }
-
-            this.players = data.players.map(p => {
-                p = JSON.parse(JSON.stringify(p));
-                delete p.cards;
-                return new Player(p);
-            });
-
-            for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
-                for (const p of data.players) {
-                    const promise = sleep(50);
-
-                    let card: Card = p.cards[i];
-                    if (!card) {
-                        continue;
-                    }
-                    card = new Card(card);
-
-                    card.positionX = this.stack.card.positionX;
-                    card.positionY = this.stack.card.positionY;
-                    card.originX = this.stack.card.originX;
-                    card.originY = this.stack.card.originY;
-                    card.rotation = this.stack.card.rotation;
-                    card.rotationAxis = 'Y';
-                    card.degrees = this.stack.card.degrees;
-                    card.adjustmentX = this.stack.card.adjustmentX;
-                    card.adjustmentY = this.stack.card.adjustmentY;
-
-                    card.futureAdjustmentX = 0;
-                    card.futureAdjustmentY = 0;
-
-                    const player = this.players.find(p2 => p.guid === p2.guid);
-                    player.cards.push(card);
-
-                    await promise;
-                };
-            }
-
-            this.rotation = GameRotation.Clockwise;
+        this.status = GameStatus.running;
+        this.pile.cards = [];
+        this.stack.hasCards = true;
+        
+        this.players = data.players.map(p => {
+            p = JSON.parse(JSON.stringify(p));
+            delete p.cards;
+            return new Player(p);
+        });
+        
+        for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
+            for (const p of data.players) {
+                const promise = sleep(50);
+                
+                let card: Card = p.cards[i];
+                if (!card) {
+                    continue;
+                }
+                card = new Card(card);
+                
+                card.positionX = this.stack.card.positionX;
+                card.positionY = this.stack.card.positionY;
+                card.originX = this.stack.card.originX;
+                card.originY = this.stack.card.originY;
+                card.rotation = this.stack.card.rotation;
+                card.rotationAxis = 'Y';
+                card.degrees = this.stack.card.degrees;
+                card.adjustmentX = this.stack.card.adjustmentX;
+                card.adjustmentY = this.stack.card.adjustmentY;
+                
+                card.futureAdjustmentX = 0;
+                card.futureAdjustmentY = 0;
+                
+                const player = this.players.find(p2 => p.guid === p2.guid);
+                player.cards.push(card);
+                
+                await promise;
+            };
         }
     }
 
-    public handlePlay(data) {
-        if (!data.data.isValid && !data.data.gameOver) {
-            return;
-        }
-
-        const player = this.players.find(p => p.guid === data.actionByPlayer.guid);
-        const cardIndex = player.cards.findIndex(c => c.guid === data.data.card.guid);
-        this.nextPlayerGuid = data.data.nextPlayerGuid;
-
-        if (cardIndex === -1) {
-            return;
-        }
+    private handlePlay(data) {
+        const player = this.players.find(p => p.guid === data.playerGuid);
+        const cardIndex = player.cards.findIndex(c => c.guid === data.card.guid);
 
         const card = player.cards[cardIndex];
-        card.corner = data.data.card.corner;
-        card.display = data.data.card.display;
-        card.color = data.data.card.color;
+        card.corner = data.card.corner;
+        card.display = data.card.display;
+        card.color = data.card.color;
         player.cards.splice(cardIndex, 1);
         this.pile.addCard(card);
+
     }
 
-    public handleGameOver() {
+    private handleNextPlayer(data) {
+        this.currentPlayerGuid = data.playerGuid;
+    } 
+
+    private handleGameOver() {
         setTimeout(() => {
             this.status = GameStatus.gameover;
             this.rotation = GameRotation.None;
         }, 600);
     }
 
-    public handleFinished() {
+    private handleFinished() {
         setTimeout(() => {
             this.status = GameStatus.finished;
             this.rotation = GameRotation.None;
         }, 600);
+    }
+
+    public handleEffect(data) {
+        switch (data.type) {
+            case 'rotation-changed':
+                this.handleEffectRotationChanged(data.effectData);
+                break;
+        }
+    }
+
+    private handleEffectRotationChanged(data) {
+        if (data.rotationClockwise) {
+            this.rotation = GameRotation.Clockwise;
+        } else if (data.rotationClockwise === false) {
+            this.rotation = GameRotation.counterClockwise;
+        } else {
+            this.rotation = GameRotation.None;
+        }
     }
 }
