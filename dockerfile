@@ -15,4 +15,4 @@ EXPOSE 8001
 
 ADD ./dist ./
 
-CMD [ "npm", "start" ]
+CMD [ "npm", "start --verbose" ]
