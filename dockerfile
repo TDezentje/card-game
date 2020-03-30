@@ -14,4 +14,4 @@ EXPOSE 8080 8001
 
 ADD ./dist ./
 
-CMD [ "npm", "start" ]
+CMD [ "node", "server.js" ]
