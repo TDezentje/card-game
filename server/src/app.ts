@@ -1,6 +1,6 @@
 import express from 'express';
 
-const PORT = 8080;
+const PORT = MODE === 'DEV' ? 8080 : 80;
 const app = express();
 const path = require('path');
 
