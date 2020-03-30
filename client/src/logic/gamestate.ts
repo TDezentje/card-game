@@ -60,7 +60,7 @@ export class GameState {
 
     public winner: Player;
     public table: Table;
-    public websocket = new WebSocket("ws://" + location.hostname);
+    public websocket = new WebSocket("wss://" + location.hostname);
     public afterTick: () => void;
 
     public activeEffectIndicator: EffectIndicator;
