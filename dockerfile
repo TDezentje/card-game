@@ -10,9 +10,8 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --only=production
 
-EXPOSE 8080
-EXPOSE 8001
+EXPOSE 8080 8001
 
 ADD ./dist ./
 
-CMD [ "npm", "start --verbose" ]
+CMD [ "npm", "start" ]
