@@ -32,7 +32,7 @@ jobs:
         yarn install
         yarn build
     - name: yarn install production
-      working-directory: ./dist
+      working-directory: dist
       run: |
         yarn install --production
     - name: 'Deploy to Azure WebApp'
