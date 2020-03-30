@@ -7,7 +7,8 @@ export enum GameEffectType {
     ResetPile = 'reset-pile',
     TakeCard = 'take-card',
     MultipleChoice = 'multiple-choice',
-    ForceColor = 'force-color'
+    ForceColor = 'force-color',
+    KeepTurn = 'keep-turn'
 }
 
 export class GameEffect {

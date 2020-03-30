@@ -131,6 +131,9 @@ export class CrazyEights extends GameLogic {
 
         if (card.corner.leftTop === '7') {
             this.currentPlayer = this.getNextPlayer(0);
+            this.onEffect(this, new GameEffect(GameEffectType.KeepTurn, {
+                playerGuid: this.currentPlayer.guid
+            }));
             return;
         }
 

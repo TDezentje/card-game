@@ -5,7 +5,7 @@ import { Table } from './models/table.model';
 import { Card } from './models/card.model';
 import { sleep } from './helpers/animation.helper';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { faSyncAlt, faBan } from '@fortawesome/free-solid-svg-icons';
+import { faSyncAlt, faBan, faRedoAlt } from '@fortawesome/free-solid-svg-icons';
 
 export enum GameStatus {
     started,
@@ -288,6 +288,9 @@ export class GameState {
             case 'player-skipped':
                 this.handlePlayerSkipped(data.effectData);
                 break;
+            case 'keep-turn':
+                this.handleKeepTurn(data.effectData);
+                break;
             case 'multiple-choice':
                 this.handleMultipleChoice(data.effectData, data.playerGuid);
                 break;
@@ -326,6 +329,10 @@ export class GameState {
 
     private handlePlayerSkipped(data) {
         this.applyEffectIdenticator(faBan, data.playerGuid);
+    }
+
+    private handleKeepTurn(data) {
+        this.applyEffectIdenticator(faRedoAlt, data.playerGuid);
     }
 
     private async applyEffectIdenticator(icon: IconDefinition, playerGuid?: string) {
