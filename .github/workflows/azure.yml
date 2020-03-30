@@ -31,7 +31,6 @@ jobs:
       run: |
         yarn install
         yarn build
-        - name: yarn install, build, and test
     - name: yarn install production
       run: |
         cd ./dist
