@@ -7,7 +7,7 @@
     "mkdirp": "mkdirp",
     "copy": "copy",
     "clean": "npm run rimraf -- dist",
-    "build": "npm run clean && npm run webpack:build",
+    "build": "npm run clean && npm run webpack:build && npm run copy package.json ./dist/package.json",
     "webpack:build": "parallel-webpack --config ./webpack.prod.config.js --no-stats",
     "webpack:watch": "parallel-webpack --config ./webpack.dev.config.js --watch --no-stats",
     "watch": "npm run clean && mkdir dist && echo '' > ./dist/index.html && npm run webpack:watch ",
