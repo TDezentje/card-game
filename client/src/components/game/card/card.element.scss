@@ -10,8 +10,11 @@
     user-select: none;
     transition: opacity .5s cubic-bezier(0.4, 0.0, 0.2, 1);
 
-    &.clickable {
+    &.mine {
         z-index: 1;
+    }
+    
+    &.clickable {
         cursor: pointer;
     }
 
@@ -24,7 +27,7 @@
     transform-origin: bottom center;
     transition: transform .3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
-.clickable:hover ~ .clickable .scaler {
+.mine.clickable:hover ~ .clickable .scaler {
     transform: translateX(30px);
 }
 

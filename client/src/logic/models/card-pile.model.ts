@@ -49,6 +49,7 @@ export class CardPile {
         card.futureAdjustmentX = rand(30);
         card.futureAdjustmentY = rand(30);
         card.futureDegrees = card.degrees + rand(55);
+        card.futureScale = 1;
     }
 
     public async resetCardsToStack(stack: CardStack) {

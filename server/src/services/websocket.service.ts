@@ -17,7 +17,9 @@ export enum GameAction {
     NextGame = 'next-game',
     TakeCards = 'take-cards',
     AdminChanged = 'admin-changed',
-    EffectResponse = 'effect-response'
+    EffectResponse = 'effect-response',
+    FocusCard = 'focus-card',
+    UnfocusCard = 'unfocus-card',
 }
 export class WebsocketService {
     private wssGame;
@@ -62,6 +64,18 @@ export class WebsocketService {
                         break;
                     case GameAction.EffectResponse:
                         self.gameService.effectResponse(this.playerGuid, turn.optionGuid);
+                        break;
+                    case GameAction.FocusCard:
+                        self.sendMessageToRoom(result.room, GameAction.FocusCard, {
+                            playerGuid: result.player.guid,
+                            cardGuid: turn.cardGuid
+                        });
+                        break;
+                    case GameAction.UnfocusCard:
+                        self.sendMessageToRoom(result.room, GameAction.UnfocusCard, {
+                            playerGuid: result.player.guid,
+                            cardGuid: turn.cardGuid
+                        });
                         break;
                 }
             });

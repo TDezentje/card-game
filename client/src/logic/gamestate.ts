@@ -15,22 +15,36 @@ export enum GameStatus {
     cleanup
 }
 
-export enum GameRotation{
+export enum GameRotation {
     None = 'none',
     Clockwise = 'clockwise',
     counterClockwise = 'counterClockwise',
 }
 
 interface MultipleChoice {
-    options: { guid: string; text: string; color: string}[];
+    options: { 
+        guid: string; 
+        text: string; 
+        color: string; 
+        x?: number; 
+        y?: number; 
+        partX1?: number;
+        partY1?: number;
+        partX2?: number;
+        partY2?: number;
+        offsetX?: number;
+        offsetY?: number;
+    }[];
     playerGuid: string;
 }
 
-interface EffectIndicator {
+export interface EffectIndicator {
     icon?: IconDefinition;
     text?: string;
     visible: boolean;
-    playerPositionDegrees: number;
+    playerPositionDegrees?: number;
+    color?: string;
+    multipleChoice?: MultipleChoice;
 }
 
 export class GameState {
@@ -49,9 +63,8 @@ export class GameState {
     public websocket = new WebSocket("ws://" + location.hostname + ':8001');
     public afterTick: () => void;
 
-    public activeMultipleChoice: MultipleChoice;
     public activeEffectIndicator: EffectIndicator;
-
+    public activeConstantEffectIndicator: EffectIndicator;
     private lastTick = 0;
 
     public constructor() {
@@ -96,6 +109,21 @@ export class GameState {
         }
         this.websocket.send(JSON.stringify({
             action: 'play',
+            cardGuid: card.guid
+        }));
+    }
+
+
+    public focusCard(card: Card) {
+        this.websocket.send(JSON.stringify({
+            action: 'focus-card',
+            cardGuid: card.guid
+        }));
+    }
+
+    public unfocusCard(card: Card) {
+        this.websocket.send(JSON.stringify({
+            action: 'unfocus-card',
             cardGuid: card.guid
         }));
     }
@@ -159,6 +187,12 @@ export class GameState {
             case 'finished':
                 this.handleFinished(data.actionData);
                 break;
+            case 'focus-card':
+                this.handleFocusCard(data.actionData);
+                break;
+            case 'unfocus-card':
+                this.handleUnfocusCard(data.actionData);
+                break;
             case 'admin-changed':
                 this.handleAdminChanged(data.actionData);
                 break;
@@ -190,17 +224,17 @@ export class GameState {
         this.pile.cards = [];
         this.stack.hasCards = true;
         this.winner;
-        
+
         this.players = data.players.map(p => {
             p = JSON.parse(JSON.stringify(p));
             delete p.cards;
             return new Player(p);
         });
-        
+
         for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
             for (const p of data.players) {
                 await sleep(50);
-                
+
                 const card: Card = p.cards[i];
                 if (!card) {
                     continue;
@@ -225,15 +259,21 @@ export class GameState {
         card.degrees = this.stack.card.degrees;
         card.adjustmentX = this.stack.card.adjustmentX;
         card.adjustmentY = this.stack.card.adjustmentY;
-        
+        card.scale = this.stack.card.scale;
+        card.futureScale = card.scale;
+
         card.futureAdjustmentX = 0;
         card.futureAdjustmentY = 0;
-        
+
         const player = this.players.find(p => playerGuid === p.guid);
         player.cards.push(card);
     }
 
     private handlePlay(data) {
+        if (this.activeConstantEffectIndicator) {
+            this.activeConstantEffectIndicator.visible = false;
+        }
+
         const player = this.players.find(p => p.guid === data.playerGuid);
         const cardIndex = player.cards.findIndex(c => c.guid === data.card.guid);
 
@@ -247,8 +287,7 @@ export class GameState {
 
     private handleNextPlayer(data) {
         this.currentPlayerGuid = data.playerGuid;
-        delete this.activeMultipleChoice;
-    } 
+    }
 
     public async handleTakeCards(data) {
         for (const card of data.cards) {
@@ -278,6 +317,28 @@ export class GameState {
         this.isAdmin = data.playerGuid === this.myPlayerGuid;
     }
 
+    public handleFocusCard(data) {
+        if (data.playerGuid === this.myPlayerGuid) {
+            return;
+        }
+
+        const card = this.players.find(p => p.guid === data.playerGuid).cards.find(c => c.guid === data.cardGuid);
+        if (card) {
+            card.focus();
+        }
+    }
+
+    public handleUnfocusCard(data) {
+        if (data.playerGuid === this.myPlayerGuid) {
+            return;
+        }
+
+        const card = this.players.find(p => p.guid === data.playerGuid).cards.find(c => c.guid === data.cardGuid);
+        if (card) {
+            card.unfocus();
+        }
+    }
+
     public handleEffect(data) {
         switch (data.type) {
             case 'rotation-changed':
@@ -297,12 +358,18 @@ export class GameState {
                 break;
             case 'take-card':
                 this.handleTakeCardEffect(data.effectData);
+                break;
+            case 'force-color':
+                this.handleForceColor(data.effectData);
+                break;
         }
     }
 
     private async handleEffectRotationChanged(data) {
         if (data.rotationClockwise !== undefined && this.rotation !== GameRotation.None) {
-            await this.applyEffectIdenticator(faSyncAlt);
+            await this.applyEffectIdenticator({
+                icon: faSyncAlt
+            });
         }
 
         if (data.rotationClockwise) {
@@ -324,52 +391,116 @@ export class GameState {
     }
 
     private handleMultipleChoice(data, playerGuid) {
-        this.activeMultipleChoice = {
+        const multipleChoice = {
             options: data.options,
             playerGuid
         };
+
+        const radius = this.table.radius * .6 * .4;
+        const stepSize = 360 / multipleChoice.options.length;
+
+        for (const [index, option] of multipleChoice.options.entries()) {
+            const radians = ((stepSize * index) - 90) * Math.PI/180;
+            option.x = Math.round(radius * Math.cos(radians));
+            option.y = Math.round(radius * Math.sin(radians));
+
+            const startRadians = ((stepSize * index) - 90 - (stepSize / 2)) * Math.PI/180;
+            const endRadians = ((stepSize * index) - 90 + (stepSize / 2)) * Math.PI/180;
+            option.partX1 = Math.round(100 * Math.cos(startRadians));
+            option.partY1 = Math.round(100 * Math.sin(startRadians));
+            option.partX2 = Math.round(100 * Math.cos(endRadians));
+            option.partY2 = Math.round(100 * Math.sin(endRadians));
+
+            option.offsetX = Math.round(Math.cos(radians));
+            option.offsetY = Math.round(Math.sin(radians));
+        }
+
+        this.applyEffectIdenticator({
+            playerGuid,
+            multipleChoice
+        });
     }
 
     private handleTakeCardEffect(data) {
-        this.applyEffectIdenticator(`+${data.count}`, data.playerGuid, true);
+        this.applyEffectIdenticator({
+            text: `+${data.count}`,
+            playerGuid: data.playerGuid,
+            noDelay: true
+        });
     }
 
     private handlePlayerSkipped(data) {
-        this.applyEffectIdenticator(faBan, data.playerGuid);
+        this.applyEffectIdenticator({
+            icon: faBan,
+            playerGuid: data.playerGuid
+        });
     }
 
     private handleKeepTurn(data) {
-        this.applyEffectIdenticator(faRedoAlt, data.playerGuid);
+        this.applyEffectIdenticator({
+            icon: faRedoAlt,
+            playerGuid: data.playerGuid
+        });
     }
 
-    private async applyEffectIdenticator(iconOrText: IconDefinition | string, playerGuid?: string, noDelay?: boolean) {
+    private handleForceColor(data) {
+        this.applyEffectIdenticator({
+            text: data.text,
+            color: data.color,
+            isConstant: true,
+            noDelay: true
+        });
+    }
+
+    private async applyEffectIdenticator({
+        icon, text, playerGuid, noDelay, color, isConstant, multipleChoice
+    }: {
+        icon?: IconDefinition;
+        text?: string;
+        playerGuid?: string;
+        noDelay?: boolean;
+        color?: string;
+        isConstant?: boolean;
+        multipleChoice?: MultipleChoice;
+    }) {
         if (!noDelay) {
+            await sleep(400);
+        }
+        
+        if ((isConstant || multipleChoice) && this.activeConstantEffectIndicator?.visible) {
+            this.activeConstantEffectIndicator.visible = false;
             await sleep(400);
         }
 
         let playerPositionDegrees;
-        
-        if(playerGuid) {
+
+        if (playerGuid) {
             const player = this.players.find(p => p.guid === playerGuid);
             playerPositionDegrees = player.degrees;
         }
 
-        this.activeEffectIndicator = {
+        const effect = {
+            text,
+            icon,
             visible: true,
-            playerPositionDegrees
+            playerPositionDegrees,
+            color: color,
+            multipleChoice
         };
 
-        if (typeof(iconOrText) === 'string') {
-            this.activeEffectIndicator.icon = null;
-            this.activeEffectIndicator.text = iconOrText;
+        if (isConstant || multipleChoice) {
+            this.activeConstantEffectIndicator = effect;
         } else {
-            this.activeEffectIndicator.text = null;
-            this.activeEffectIndicator.icon = iconOrText;
+            this.activeEffectIndicator = effect;
         }
 
-        setTimeout(async () => {
-            this.activeEffectIndicator.visible = false;
-        }, 1400);
+
+        if (!isConstant && !multipleChoice) {
+            setTimeout(async () => {
+                this.activeEffectIndicator.visible = false;
+            }, 1400);
+        }
+
         await sleep(500);
     }
 }

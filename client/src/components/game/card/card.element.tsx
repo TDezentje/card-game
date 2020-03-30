@@ -8,14 +8,24 @@ export function CardElement({
     card,
     isMine,
     gameState,
-    onClick
+    onClick,
+    onMouseEnter,
+    onMouseLeave,
 }: {
     card: Card;
     isMine?: boolean;
     gameState: GameState;
     onClick?;
+    onMouseEnter?;
+    onMouseLeave?;
 }) {
-    return <div class={`${css.cardContainer} ${isMine ? css.clickable : ''} ${gameState.status === GameStatus.cleanup ? css.cleanup : ''}`} onClick={onClick} style={{transformOrigin: `${card.originX}px ${card.originY}px`, transform: `translate(${card.positionX + card.adjustmentX}px, ${card.positionY  + card.adjustmentY}px) rotate(${card.degrees || '0'}deg)`}}>
+    return <div class={`${css.cardContainer} ${onClick ? css.clickable : ''} ${isMine ? css.mine : ''} ${gameState.status === GameStatus.cleanup ? css.cleanup : ''}`} 
+            style={{
+                transformOrigin: `${card.originX}px ${card.originY}px`, 
+                transform: `translate(${card.positionX + card.adjustmentX}px, ${card.positionY  + card.adjustmentY}px) rotate(${card.degrees || '0'}deg) scale(${card.scale || 1})`
+            }}
+            onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick}>
+
         <div class={css.scaler}>
             <div class={`${css.card} ${isMine ? css.clickable : ''}`} style={{transform: `rotate${card.rotationAxis}(${card.rotation}deg)`}}>
                 <div class={`${css.front} ${css.face}`}>

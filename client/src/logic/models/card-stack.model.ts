@@ -15,5 +15,6 @@ export class CardStack {
         this.card.adjustmentY = 0;
         this.card.originX = CARD_WIDTH / 2;
         this.card.originY = CARD_HEIGHT;
+        this.card.scale = 1;
     }
 }

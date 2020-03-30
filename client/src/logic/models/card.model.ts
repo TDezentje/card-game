@@ -16,6 +16,7 @@ export class Card {
     public rotationAxis?: string;
     public originX?: number;
     public originY?: number;
+    public scale?: number;
 
     public futurePositionX?: number;
     public futurePositionY?: number;
@@ -25,6 +26,7 @@ export class Card {
     public futureRotation?: number;
     public futureOriginX?: number;
     public futureOriginY?: number;
+    public futureScale?: number;
 
     public isCleaning = false;
     public isResetting = false;
@@ -43,6 +45,16 @@ export class Card {
         this.originX = getTweenValue(this.originX, this.futureOriginX, deltaT, 6);
         this.originY = getTweenValue(this.originY, this.futureOriginY, deltaT, 6);
         this.degrees = getTweenValue(this.degrees, this.futureDegrees, deltaT, 6);
+
+        this.scale = getTweenValue(this.scale * 100, this.futureScale * 100, deltaT, 10) / 100;
+    }
+
+    public focus() {
+        this.futureScale = 1.15;
+    }
+
+    public unfocus() {
+        this.futureScale = 1;
     }
 }
 

@@ -1,36 +1,84 @@
 import { h } from 'preact';
-import { GameState, GameStatus } from 'logic/gamestate';
+import { GameState, GameStatus, EffectIndicator } from 'logic/gamestate';
 import { CardElement } from './card/card.element';
-import { useCallback } from 'preact/hooks';
 import { IconElement } from './icon/icon.element';
 
 const css = require('./game.element.scss');
+
+const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
+    gameState: GameState;
+    indicator: EffectIndicator;
+    isConstant?: boolean;
+}) => {
+    const onOptionClick = (guid: string) => {
+        gameState.selectOption(guid);
+    };
+
+    return <div class={`${css.effectIndicatorContainer} ${indicator?.multipleChoice ? css.multipleChoice : ''}`} style={{width: gameState.table.size, height: gameState.table.size}}>
+        <div class={`${css.effectIndicator} ${indicator?.visible ? css.visible : ''} ${isConstant && !indicator?.multipleChoice ? css.constant : ''}`}>
+            <IconElement icon={indicator?.icon} />
+            <span class={indicator?.color ? css.background : ''} style={{color: indicator?.color}}>{indicator?.text}</span>
+
+            {
+                indicator?.playerPositionDegrees !== undefined ? 
+                    <div class={css.arrowContainer} style={{transform: `translate(-50%, -50%) rotate(${indicator.playerPositionDegrees}deg)`}}>
+                        <div class={css.arrow} />
+                    </div> : null
+            }
+            
+            {
+                indicator?.multipleChoice ? <div class={css.multipleChoiceBackground}>
+                    {
+                        <svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
+                            {
+                                indicator?.multipleChoice?.options.map(o => [
+                                    <path d={`M${o.offsetX},${o.offsetY} L${o.partX1 + o.offsetX},${o.partY1 + o.offsetY} A100,100 0 0,1 ${o.partX2 + o.offsetX},${o.partY2 + o.offsetY} Z`} fill="white"
+                                        onClick={() => onOptionClick(o.guid)} />
+                                ])
+                            }
+                        </svg>
+                    }
+                </div> : null
+            }
+            {
+                indicator?.multipleChoice?.options.map(o => 
+                    <button onClick={() => onOptionClick(o.guid)} disabled ={indicator.multipleChoice.playerGuid !== gameState.myPlayerGuid} 
+                            style={{color: o.color, transform: `translate(-50%, -50%) translate(${o.x}px, ${o.y}px)`}}><span>{o.text}</span></button>)
+            }
+            
+        </div>
+    </div>;
+};
 
 export function GameElement({
     gameState
 }: {
     gameState: GameState;
 }) {
-    const onStartClick = useCallback(() => {
+    const onStartClick = () => {
         gameState.startGame();
-    }, [gameState]);
+    };
 
-    const onNextGameClick = useCallback((event) => {
+    const onNextGameClick = (event) => {
         event.preventDefault();
         gameState.nextGame();
-    }, [gameState]);
+    };
 
-    const onMyCardClick = useCallback((card) => {
+    const onMyCardClick = (card) => {
         gameState.playCard(card);
-    }, [gameState]);
+    };
 
-    const onStackClick = useCallback(() => {
+    const onMyCardMouseEnter = (card) => {
+        gameState.focusCard(card);
+    };
+
+    const onMyCardMouseLeave = (card) => {
+        gameState.unfocusCard(card);
+    };
+
+    const onStackClick = () => {
         gameState.takeCard();
-    }, [gameState]);
-
-    const onOptionClick = useCallback((guid: string) => {
-        gameState.selectOption(guid);
-    }, [gameState]);
+    };
 
     const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
 
@@ -60,7 +108,10 @@ export function GameElement({
             gameState.players.map(p => 
                 p.cards?.map(c => {
                     const isMine = p.guid === gameState.myPlayerGuid;
-                    return <CardElement gameState={gameState} isMine={isMine} onClick={isMine ? () => onMyCardClick(c) : null} card={c} />;
+                    return <CardElement gameState={gameState} isMine={isMine} card={c}
+                            onClick={isMine ? () => onMyCardClick(c) : null} 
+                            onMouseEnter={isMine ? () => onMyCardMouseEnter(c) : null} 
+                            onMouseLeave={isMine ? () => onMyCardMouseLeave(c) : null} />;
                 })
             )
         }
@@ -77,21 +128,8 @@ export function GameElement({
             gameState.status === GameStatus.started && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
         }
 
-        <div class={css.effectIndicatorContainer} style={{width: gameState.table.size, height: gameState.table.size}}>
-            <div class={`${css.effectIndicator} ${gameState.activeEffectIndicator?.visible ? css.visible : ''}`}>
-                <IconElement icon={gameState.activeEffectIndicator?.icon} />
-                <span>{gameState.activeEffectIndicator?.text}</span>
-
-                {
-                    gameState.activeEffectIndicator?.playerPositionDegrees !== undefined ? 
-                        <div class={css.arrowContainer} style={{transform: `translate(-50%, -50%) rotate(${gameState.activeEffectIndicator.playerPositionDegrees}deg)`}}>
-                            <div class={css.arrow} />
-                        </div> : null
-                }
-                
-            </div>
-        </div>
-
+        <EffectIndicatorElement key="constant" gameState={gameState} indicator={gameState.activeConstantEffectIndicator} isConstant />
+        <EffectIndicatorElement key="instant" gameState={gameState} indicator={gameState.activeEffectIndicator} />
 
         <div class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
             <span class={css.title}>GAME OVER!</span>
@@ -107,15 +145,6 @@ export function GameElement({
                  ] : null
             }
             {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende spel</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
-        </div>
-
-        <div class={`${css.overlay} ${gameState.activeMultipleChoice ? css.visible : ''}`}>
-            <span class={css.sub}>Maak je keuze</span>
-            <div class={css.options} style={{width: gameState.table.size, height: gameState.table.size}}>
-            {
-                gameState.activeMultipleChoice?.options.map(o => <button onClick={() => onOptionClick(o.guid)} disabled ={gameState.activeMultipleChoice.playerGuid !== me.guid} style={{color: o.color}}>{o.text}</button>)
-            }
-            </div>
         </div>
     </div>;
 }

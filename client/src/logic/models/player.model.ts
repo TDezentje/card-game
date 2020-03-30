@@ -75,6 +75,7 @@ export class Player {
                     card.futureDegrees = card.degrees + (rand(36) * 10);
                     card.futureOriginX = CARD_WIDTH / 2;
                     card.futureOriginY = CARD_HEIGHT / 2;
+                    card.futureScale = 1;
                     card.isCleaning = true;
                 }
 
@@ -113,7 +114,7 @@ export class Player {
             card.futureOriginY = CARD_HEIGHT;
             card.futureAdjustmentX = 0;
             card.futureAdjustmentY = 0;
-    
+
             card.tick(deltaT);
         }
     }

@@ -242,37 +242,6 @@
         color: #fff;
         font-size: 1.5rem;
     }
-
-    
-    .options {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-
-        button {
-            width: 175px;
-            height: 175px;
-            font-size: 7rem;
-            background: white;
-            border: none;
-            border-radius: 15px;
-            margin: 8px;
-            box-sizing: border-box;
-            padding: 0;
-            box-shadow: 0 7px 8px -4px rgba(0,0,0,.2), 0 12px 17px 2px rgba(0,0,0,.14), 0 5px 22px 4px rgba(0,0,0,.12);
-            transition: transform .2s cubic-bezier(0.4, 0.0, 0.2, 1);
-           
-            &:not([disabled]) {
-                cursor: pointer;
-
-                :hover {
-                    transform: scale(1.2);
-                }
-            }
-        }
-    }
 }
 
 .hud {
@@ -318,6 +287,10 @@
     top: 50%;
     left: 50%;
     pointer-events: none;
+
+    &.multipleChoice {
+        pointer-events: all;
+    }
 }
 
 .effectIndicator {
@@ -331,14 +304,81 @@
     padding: 20px;
     border-radius: 50%;
     font-size: 13rem;
+    opacity: 0;
     background: radial-gradient(rgba(0, 0, 0, .26) 0%, rgba(0, 0, 0, .26) 30%, transparent 90%, transparent 100%);
     transition: opacity .4s cubic-bezier(0.4, 0.0, 0.2, 1), transform .4s cubic-bezier(0.4, 0.0, 0.2, 1);
-    opacity: 0;
     backdrop-filter: blur(5px);
+
+    span.background {
+        background: white;
+        border-radius: 50%;
+        width: 50%;
+        height: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
     &.visible {
         transform: translate(-50%, -50%) scale(1) rotate(0deg);
         opacity: 1;
+
+        &.constant {
+            transform: translate(-50%, -50%) scale(.25) rotate(0deg);
+        }
+    }
+
+    .multipleChoiceBackground {
+        border-radius: 50%;
+        width: 70%;
+        height: 70%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+
+            path {
+                cursor: pointer;
+                transition: transform .2s cubic-bezier(0.4, 0.0, 0.2, 1);
+                opacity: .8;
+
+                &:hover {
+                    transform: scale(1.05);
+                    opacity: .95;
+                }
+            }
+        }
+    }
+
+    button {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        border-radius: 50%;
+        width: 20%;
+        height: 20%;
+        background: transparent;
+        border: none;
+        border-radius: 50%;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        margin: 0;
+        transition: transform .2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        pointer-events: none;
+        span {
+            font-size: 55px;
+        }
+
+        &:not([disabled]) {
+            cursor: pointer;
+        }
     }
 
     .arrowContainer {
@@ -350,6 +390,7 @@
         display: flex;
         justify-content: flex-end;
         transform-origin: center;
+        pointer-events: none;
     }
 
     .arrow {
@@ -359,8 +400,7 @@
         animation-iteration-count: infinite;
     }
 
-    .arrow,
-    svg {
+    .arrow {
         opacity: .9;
     }
 }
