@@ -27,7 +27,8 @@ interface MultipleChoice {
 }
 
 interface EffectIndicator {
-    icon: IconDefinition;
+    icon?: IconDefinition;
+    text?: string;
     visible: boolean;
     playerPositionDegrees: number;
 }
@@ -294,6 +295,8 @@ export class GameState {
             case 'multiple-choice':
                 this.handleMultipleChoice(data.effectData, data.playerGuid);
                 break;
+            case 'take-card':
+                this.handleTakeCardEffect(data.effectData);
         }
     }
 
@@ -327,6 +330,10 @@ export class GameState {
         };
     }
 
+    private handleTakeCardEffect(data) {
+        this.applyEffectIdenticator(`+${data.count}`, data.playerGuid, true);
+    }
+
     private handlePlayerSkipped(data) {
         this.applyEffectIdenticator(faBan, data.playerGuid);
     }
@@ -335,8 +342,11 @@ export class GameState {
         this.applyEffectIdenticator(faRedoAlt, data.playerGuid);
     }
 
-    private async applyEffectIdenticator(icon: IconDefinition, playerGuid?: string) {
-        await sleep(400);
+    private async applyEffectIdenticator(iconOrText: IconDefinition | string, playerGuid?: string, noDelay?: boolean) {
+        if (!noDelay) {
+            await sleep(400);
+        }
+
         let playerPositionDegrees;
         
         if(playerGuid) {
@@ -345,10 +355,17 @@ export class GameState {
         }
 
         this.activeEffectIndicator = {
-            icon,
             visible: true,
             playerPositionDegrees
         };
+
+        if (typeof(iconOrText) === 'string') {
+            this.activeEffectIndicator.icon = null;
+            this.activeEffectIndicator.text = iconOrText;
+        } else {
+            this.activeEffectIndicator.text = null;
+            this.activeEffectIndicator.icon = iconOrText;
+        }
 
         setTimeout(async () => {
             this.activeEffectIndicator.visible = false;

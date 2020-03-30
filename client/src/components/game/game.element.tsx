@@ -80,6 +80,7 @@ export function GameElement({
         <div class={css.effectIndicatorContainer} style={{width: gameState.table.size, height: gameState.table.size}}>
             <div class={`${css.effectIndicator} ${gameState.activeEffectIndicator?.visible ? css.visible : ''}`}>
                 <IconElement icon={gameState.activeEffectIndicator?.icon} />
+                <span>{gameState.activeEffectIndicator?.text}</span>
 
                 {
                     gameState.activeEffectIndicator?.playerPositionDegrees !== undefined ? 

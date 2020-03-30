@@ -51,11 +51,16 @@ export class CrazyEights extends GameLogic {
         }
 
         const count = this.activeTakeCard?.effectData.count || 1;
-        delete this.activeTakeCard;
+        
+        if (this.activeTakeCard) {
+            this.activeTakeCard.effectData.playerGuid = this.currentPlayer.guid;
+            this.onEffect(this, this.activeTakeCard);
+            delete this.activeTakeCard;
+        }
+
         if (this.cardsOnPile.length > 1 && this.cardsToUse.length < count) {
             this.resetPile();
         }
-
 
         const cards: Card[] = [];
         for (let i = 0; i < count; i++) {
