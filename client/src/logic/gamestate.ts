@@ -75,6 +75,7 @@ export class GameState {
         this.table = new Table();
 
         this.websocket.onmessage = this.onWebsocketMessage.bind(this);
+        this.websocket.onerror = this.onWebsocketError.bind(this);
     }
 
     public tick(time: number) {
@@ -153,6 +154,10 @@ export class GameState {
         }));
     }
 
+    private onWebsocketError(event){
+        console.log(event);
+    }
+    
     private onWebsocketMessage(event) {
         const data = JSON.parse(event.data);
         console.log(data);
