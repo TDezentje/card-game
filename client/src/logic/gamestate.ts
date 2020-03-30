@@ -225,6 +225,14 @@ export class GameState {
         this.stack.hasCards = true;
         this.winner;
 
+        if (this.activeConstantEffectIndicator) {
+            this.activeConstantEffectIndicator.visible = false;
+        }
+        
+        if (this.activeEffectIndicator) {
+            this.activeEffectIndicator.visible = false;
+        }
+
         this.players = data.players.map(p => {
             p = JSON.parse(JSON.stringify(p));
             delete p.cards;
