@@ -20,6 +20,9 @@ export enum GameAction {
     EffectResponse = 'effect-response',
     FocusCard = 'focus-card',
     UnfocusCard = 'unfocus-card',
+    PlayerCreated = 'player-created',
+    RoomCreate = 'room-create',
+    RoomLeave = 'room-leave'
 }
 export class WebsocketService {
     private wssGame;
@@ -34,14 +37,14 @@ export class WebsocketService {
 
         this.wssGame = new WebSocket.Server({ host: '127.0.0.1', port: MODE === 'DEV' ? 8001 : 8080, perMessageDeflate : false });
         this.wssGame.on('connection', (ws) => {
-            const result = this.gameService.joinGame();
+            const result = this.gameService.createPlayer();
             ws.isAlive = true;
             ws.playerGuid = result.player.guid;
-            ws.roomGuid = result.room.guid;
             ws.on('pong', () => ws.isAlive = true);
-            ws.send(this.wrapMessage(GameAction.Join, {
+            ws.send(this.wrapMessage(GameAction.PlayerCreated, {
                 player: result.player,
-                players: result.room.players
+                games: result.games,
+                rooms: result.rooms
             }));
 
             // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -50,6 +53,16 @@ export class WebsocketService {
                 const turn: Turn = JSON.parse(data);
 
                 switch (turn.action) {
+                    case GameAction.Join:
+                        ws.roomGuid = turn.roomGuid;
+                        self.gameService.joinGame(this.playerGuid, turn.roomGuid);
+                        break;
+                    case GameAction.RoomCreate:
+                        self.gameService.createRoom(this.playerGuid, this.gameGuid);
+                        break;
+                    case GameAction.RoomLeave:
+                        self.gameService.leaveRoom(this.playerGuid);
+                        break;
                     case GameAction.Start:
                         self.gameService.startGame(this.playerGuid);
                         break;
@@ -66,13 +79,13 @@ export class WebsocketService {
                         self.gameService.effectResponse(this.playerGuid, turn.optionGuid);
                         break;
                     case GameAction.FocusCard:
-                        self.sendMessageToRoom(result.room, GameAction.FocusCard, {
+                        self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.FocusCard, {
                             playerGuid: result.player.guid,
                             cardGuid: turn.cardGuid
                         });
                         break;
                     case GameAction.UnfocusCard:
-                        self.sendMessageToRoom(result.room, GameAction.UnfocusCard, {
+                        self.sendMessageToRoom(ws.roomGuid, GameAction.UnfocusCard, {
                             playerGuid: result.player.guid,
                             cardGuid: turn.cardGuid
                         });
@@ -96,8 +109,25 @@ export class WebsocketService {
 
     public sendMessageToRoom(room: Room, action: GameAction, message?: any, exceptPlayerGuids?: string[]) {
         this.wssGame.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN && client.roomGuid === room.guid && 
+            if (client.readyState === WebSocket.OPEN && client.roomGuid === room.guid &&
                 (!exceptPlayerGuids || !exceptPlayerGuids.includes(client.playerGuid))) {
+                client.send(this.wrapMessage(action, message));
+            }
+        });
+    }
+
+    public sendMessageToRoomByGuid(roomGuid: string, action: GameAction, message?: any, exceptPlayerGuids?: string[]) {
+        this.wssGame.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN && client.roomGuid === roomGuid &&
+                (!exceptPlayerGuids || !exceptPlayerGuids.includes(client.playerGuid))) {
+                client.send(this.wrapMessage(action, message));
+            }
+        });
+    }
+
+    public sendMessage(action: GameAction, message?: any) {
+        this.wssGame.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
                 client.send(this.wrapMessage(action, message));
             }
         });

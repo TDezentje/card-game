@@ -2,6 +2,8 @@ import { Card } from 'models/card.model';
 import { GameLogic } from './game.logic';
 
 export class TheMind extends GameLogic {
+    public static gameName = "The mind";
+    public static guid = "57325385-1037-49df-9230-8806929531a2";
     private level = 1;
     private isGameOver = false;
     protected startCardAmountInHand = 1;
