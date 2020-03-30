@@ -32,8 +32,8 @@ jobs:
         yarn install
         yarn build
     - name: yarn install production
+      working-directory: ./dist
       run: |
-        cd ./dist
         yarn install --production
     - name: 'Deploy to Azure WebApp'
       uses: azure/webapps-deploy@v2
