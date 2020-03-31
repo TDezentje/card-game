@@ -19,88 +19,50 @@ export class GameService {
 
     public loadGames() {
         this.games = [];
-        //this.games.push(TheMind);
+        this.games.push(TheMind);
         this.games.push(CrazyEights);
     }
 
-    public createGame() {
-        const game = this.getRandomGame();
-        const instance = new game();
-        this.roomService.createRoom(instance);
-
-        instance.onStart = this.onGameStarted.bind(this);
-        instance.onNextPlayer = this.onNextPlayer.bind(this);
-        instance.onPlayCard = this.onPlayCard.bind(this);
-        instance.onTakeCards = this.onTakeCards.bind(this);
-        instance.onEffect = this.onEffect.bind(this);
-        instance.onGameover = this.onGameover.bind(this);
-        instance.onFinish = this.onFinish.bind(this);
-        instance.onPlayerLeft = this.onPlayerLeft.bind(this);
-    }
-
-    public getRandomGame() {
-        const idx = Math.floor(Math.random() * Math.floor(this.games.length));
-        return this.games[idx];
-    }
-
-    public startGame(playerGuid: string) {
-        const player = this.playerService.getPlayer(playerGuid);
-        
-        if (player.isAdmin) {
-            const room = this.getRoomByPlayerGuid(playerGuid);
-            this.roomService.startRoom(room.guid);
-            room.game.startGame(room.players);
-        }
-    }
-
-    public playCard(playerGuid: string, cardGuid: string) {
-        const room = this.getRoomByPlayerGuid(playerGuid);
-        room.game.playCard(playerGuid, cardGuid);
-    }
-
-    public takeCards(playerGuid: string){
-        const room = this.getRoomByPlayerGuid(playerGuid);
-        room.game.takeCards(playerGuid);
-    }
-
-    public effectResponse(playerGuid: string, optionGuid: string) {
-        const room = this.getRoomByPlayerGuid(playerGuid);
-        room.game.answerMultipleChoice(playerGuid, optionGuid);
-    }
-
-    public nextGame(playerGuid: string) {
-        const player = this.playerService.getPlayer(playerGuid);
-        
-        if (player.isAdmin) {
-            const room = this.getRoomByPlayerGuid(playerGuid);
-            room.game.nextGame();
-        }
-    }
-
-    public joinGame(): {player: Player; room: Room } {
-        if (this.roomService.getRooms().some(r => !r.isStarted)) {
-            const player = this.playerService.createPlayer();
-            const room = this.roomService.getRooms().find(r => !r.isStarted);
-
-            if (room.players.length === 0) {
-                player.isAdmin = true;
-            }
-            this.roomService.addUserToRoom(room.guid, player);
-            this.playerService.updatePlayerColor(player.guid, room.players);
-
-            this.websocketService.sendMessageToRoom(room, GameAction.PlayerJoined, player, [player.guid]);
-
+    public getGames() {
+        return this.games.map(g => {
             return {
-                player,
-                room
+                name: (g as any).gameName,
+                guid: (g as any).guid
             };
-        } else {
-            this.createGame();
-            return this.joinGame();
-        }
+        });
     }
 
-    public leaveGame(playerGuid: string) {
+    public getRooms() {
+        const roomsToPlay = this.roomService.getRooms();
+
+        return roomsToPlay.map(rtp => {
+            name: rtp.name;
+            guid: rtp.guid;
+            isStarted: rtp.isStarted;
+            playersCount: rtp.players?.length;
+            maxPlayersCount: rtp.game.maxPlayers;
+            gameName: rtp.game.constructor.name;
+        });
+    }
+
+    public createRoom(playerGuid: string, gameGuid: string) {
+        let room = this.getRoomByPlayerGuid(playerGuid);
+        if (room) {
+            // User already in room
+            return;
+        }
+
+        const game = this.games.find(g => (g as any).guid === gameGuid);
+        const instance = new game();
+        room = this.roomService.createRoom(instance);
+        this.sendMessageToEverybody(GameAction.RoomCreate, {
+            room
+        });
+
+        this.joinGame(room.guid, playerGuid);
+    }
+
+    public leaveRoom(playerGuid: string) {
         const room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {
             const idx = room.players.findIndex(p => p.guid === playerGuid);
@@ -112,12 +74,100 @@ export class GameService {
                     playerGuid: room.players[0].guid
                 });
             }
-            room.game.leaveGame(playerGuid);
+
+            if (room.players.length === 0) {
+                this.roomService.deleteRoom(room.guid);
+            }
         }
-        
     }
 
-    public getRoomByPlayerGuid(playerGuid: string) {
+    public startGame(playerGuid: string) {
+        const player = this.playerService.getPlayer(playerGuid);
+
+        if (player.isAdmin) {
+            const room = this.getRoomByPlayerGuid(playerGuid);
+
+            room.game.onStart = this.onGameStarted.bind(this);
+            room.game.onNextPlayer = this.onNextPlayer.bind(this);
+            room.game.onPlayCard = this.onPlayCard.bind(this);
+            room.game.onTakeCards = this.onTakeCards.bind(this);
+            room.game.onEffect = this.onEffect.bind(this);
+            room.game.onGameover = this.onGameover.bind(this);
+            room.game.onFinish = this.onFinish.bind(this);
+            room.game.onPlayerLeft = this.onPlayerLeft.bind(this);
+            room.game.onPlayerLeft = this.onPlayerLeft.bind(this);
+
+            this.roomService.startRoom(room.guid);
+            room.game.startGame(room.players);
+        }
+    }
+
+    public playCard(playerGuid: string, cardGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        room.game.playCard(playerGuid, cardGuid);
+    }
+
+    public takeCards(playerGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        room.game.takeCards(playerGuid);
+    }
+
+    public effectResponse(playerGuid: string, optionGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        room.game.answerMultipleChoice(playerGuid, optionGuid);
+    }
+
+    public nextGame(playerGuid: string) {
+        const player = this.playerService.getPlayer(playerGuid);
+
+        if (player.isAdmin) {
+            const room = this.getRoomByPlayerGuid(playerGuid);
+            room.game.nextGame();
+        }
+    }
+
+    public createPlayer(): { player: Player; games; rooms } {
+        const player = this.playerService.createPlayer();
+        return {
+            player,
+            games: this.getGames(),
+            rooms: this.getRooms()
+        };
+    }
+
+    public joinGame(playerGuid: string, roomGuid: string): { room: Room } {
+        const player = this.playerService.getPlayer(playerGuid);
+        const room = this.roomService.getRoom(roomGuid);
+        if (!room.isStarted) {
+            if (room.players.length === 0) {
+                player.isAdmin = true;
+            }
+            this.roomService.addUserToRoom(room.guid, player);
+            this.playerService.updatePlayerColor(player.guid, room.players);
+
+            this.websocketService.sendMessageToPlayer(playerGuid, GameAction.Join, {
+                player,
+                players: room.players
+            });
+
+            this.websocketService.sendMessageToRoom(room, GameAction.PlayerJoined, player, [player.guid]);
+
+            return {
+                room
+            };
+        }
+    }
+
+    public leaveGame(playerGuid: string) {
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        if (room) {
+            this.leaveRoom(playerGuid);
+            room.game.leaveGame(playerGuid);
+        }
+
+    }
+
+    private getRoomByPlayerGuid(playerGuid: string) {
         return this.roomService.getRooms().find(r => r.players.some(p => p.guid === playerGuid));
     }
 
@@ -170,17 +220,21 @@ export class GameService {
     }
 
     public onEffect(game: GameLogic, gameEffect: GameEffect) {
-        this.sendMessageToRoom(game, GameAction.Effect, gameEffect); 
+        this.sendMessageToRoom(game, GameAction.Effect, gameEffect);
     }
 
     public onPlayerLeft(game: GameLogic, playerGuid: string) {
         this.sendMessageToRoom(game, GameAction.PlayerLeft, {
             playerGuid
-        }); 
+        });
     }
 
-    public sendMessageToRoom(game: GameLogic, action: GameAction, message?: any, exceptPlayerGuids?: string[])  {
+    public sendMessageToRoom(game: GameLogic, action: GameAction, message?: any, exceptPlayerGuids?: string[]) {
         const room = this.roomService.getRoomByGame(game);
-        this.websocketService.sendMessageToRoom(room, action, message, exceptPlayerGuids); 
+        this.websocketService.sendMessageToRoom(room, action, message, exceptPlayerGuids);
+    }
+
+    public sendMessageToEverybody(action: GameAction, message?: any) {
+        this.websocketService.sendMessage(action, message);
     }
 }

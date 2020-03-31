@@ -26,7 +26,9 @@ export class GamePlayer extends Player {
     }
 }
 
-export abstract class GameLogic {
+export abstract class GameLogic {   
+    public static gameName = "";
+    public static guid: string;
     public maxPlayers?: number;
     public players: GamePlayer[];
     protected startCardAmountInHand;
