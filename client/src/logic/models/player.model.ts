@@ -2,7 +2,7 @@ import { Card, CARD_HEIGHT, CARD_WIDTH } from './card.model';
 import { Table } from './table.model';
 import { ScreenSize } from 'logic/interfaces/screen-size.interface';
 import { getTweenValue, rand } from 'logic/helpers/animation.helper';
-import { GameStatus } from 'logic/gamestate';
+import { GameStatus } from 'logic/app-state';
 
 export class Player {
     public name: string;

@@ -37,8 +37,7 @@ export class RoomService {
     }
 
     public deleteRoom(roomGuid) {
-        const roomIdx = this.getRooms().findIndex(r => r.guid === roomGuid);
-        this.getRooms().splice(roomIdx, 1);
+        delete this.rooms[roomGuid];
     }    
 
     public addUserToRoom(roomGuid: string, player: Player) {

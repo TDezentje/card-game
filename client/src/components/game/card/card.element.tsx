@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { Card } from 'logic/models/card.model';
-import { GameState, GameStatus } from 'logic/gamestate';
+import { AppState, GameStatus } from 'logic/app-state';
 
 const css = require('./card.element.scss');
 
@@ -14,7 +14,7 @@ export function CardElement({
 }: {
     card: Card;
     isMine?: boolean;
-    gameState: GameState;
+    gameState: AppState;
     onClick?;
     onMouseEnter?;
     onMouseLeave?;

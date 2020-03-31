@@ -7,7 +7,7 @@ export class TheMind extends GameLogic {
     private level = 1;
     private isGameOver = false;
     protected startCardAmountInHand = 1;
-    protected hasPile = false;
+    protected hasStack = false;
 
     public playCard(playerGuid: string, cardGuid: string) {
         if (this.isGameOver) {

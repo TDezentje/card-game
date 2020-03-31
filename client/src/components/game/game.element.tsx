@@ -1,12 +1,12 @@
 import { h } from 'preact';
-import { GameState, GameStatus, EffectIndicator } from 'logic/gamestate';
+import { AppState, GameStatus, EffectIndicator } from 'logic/app-state';
 import { CardElement } from './card/card.element';
 import { IconElement } from './icon/icon.element';
 
 const css = require('./game.element.scss');
 
 const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
-    gameState: GameState;
+    gameState: AppState;
     indicator: EffectIndicator;
     isConstant?: boolean;
 }) => {
@@ -42,7 +42,7 @@ const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
             }
             {
                 indicator?.multipleChoice?.options.map(o => 
-                    <button onClick={() => onOptionClick(o.guid)} disabled ={indicator.multipleChoice.playerGuid !== gameState.myPlayerGuid} 
+                    <button onClick={() => onOptionClick(o.guid)} disabled ={indicator.multipleChoice.playerGuid !== gameState.me.guid} 
                             style={{color: o.color, transform: `translate(-50%, -50%) translate(${o.x}px, ${o.y}px)`}}><span>{o.text}</span></button>)
             }
             
@@ -53,7 +53,7 @@ const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
 export function GameElement({
     gameState
 }: {
-    gameState: GameState;
+    gameState: AppState;
 }) {
     const onStartClick = () => {
         gameState.startGame();
@@ -80,7 +80,7 @@ export function GameElement({
         gameState.takeCard();
     };
 
-    const me = gameState.players.find(p => p.guid === gameState.myPlayerGuid);
+    const me = gameState.players.find(p => p.guid === gameState.me.guid);
 
     return <div class={css.gameContainer}>
         <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}}>
@@ -107,7 +107,7 @@ export function GameElement({
         {
             gameState.players.map(p => 
                 p.cards?.map(c => {
-                    const isMine = p.guid === gameState.myPlayerGuid;
+                    const isMine = p.guid === gameState.me.guid;
                     return <CardElement gameState={gameState} isMine={isMine} card={c}
                             onClick={isMine ? () => onMyCardClick(c) : null} 
                             onMouseEnter={isMine ? () => onMyCardMouseEnter(c) : null} 
@@ -117,7 +117,7 @@ export function GameElement({
         }
 
         {
-            gameState.players.filter(p => p.guid !== gameState.myPlayerGuid).map(p => <div class={`${css.nameTag} ${gameState.currentPlayerGuid === p.guid ? css.active : ''}`} style={{transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
+            gameState.players.filter(p => p.guid !== gameState.me.guid).map(p => <div class={`${css.nameTag} ${gameState.currentPlayerGuid === p.guid ? css.active : ''}`} style={{transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
                 <div class={css.indicator} />
                 <div class={css.background} style={{background: p.color }} />
                 <span>{p.name}</span>
@@ -125,7 +125,7 @@ export function GameElement({
         }
 
         {
-            gameState.status === GameStatus.started && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
+            gameState.status === GameStatus.lobby && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
         }
 
         <EffectIndicatorElement key="constant" gameState={gameState} indicator={gameState.activeConstantEffectIndicator} isConstant />
@@ -133,18 +133,18 @@ export function GameElement({
 
         <div class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
             <span class={css.title}>GAME OVER!</span>
-            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Opnieuw</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Play again</a> : <span class={css.sub}>Wait for the gamemaster</span> }
         </div>
 
         <div class={`${css.overlay} ${gameState.status === GameStatus.finished ? css.visible : ''}`}>
-            <span class={css.title}>HOERA!</span>
+            <span class={css.title}>Congratulations!</span>
             {
                 gameState.winner ? [
                     <span class={css.title} style={{color:gameState.winner.color}}>{gameState.winner.name}</span>,
-                    <span class={css.title}>heeft gewonnen</span>
+                    <span class={css.title}>has won</span>
                  ] : null
             }
-            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Volgende spel</a> : <span class={css.sub}>Wacht op de gamemaster</span> }
+            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Next game</a> : <span class={css.sub}>Wait for the gamemaster</span> }
         </div>
     </div>;
 }

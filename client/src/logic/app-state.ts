@@ -8,11 +8,11 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { faSyncAlt, faBan, faRedoAlt } from '@fortawesome/free-solid-svg-icons';
 
 export enum GameStatus {
-    started,
-    running,
-    gameover,
-    finished,
-    cleanup
+    lobby = 1,
+    started = 2,
+    gameover = 3,
+    finished = 4,
+    cleanup = 5
 }
 
 export enum GameRotation {
@@ -47,9 +47,26 @@ export interface EffectIndicator {
     multipleChoice?: MultipleChoice;
 }
 
-export class GameState {
+export class Room {
+    guid: string;
+    name: string;
+    isStarted: boolean;
+    playersCount: number;
+    maxPlayersCount: number;
+    gameName: string;
+}
+
+export class Game {
+    guid: string;
+    name: string;
+}
+
+export class AppState {
+    public availableGames: Game[];
+    public allRooms: Room[];
+    public me: Player;
+
     public players: Player[];
-    public myPlayerGuid: string;
     public currentPlayerGuid: string;
     public stack: CardStack;
     public pile: CardPile;
@@ -91,21 +108,35 @@ export class GameState {
         this.stack.tick(screenSize);
         this.pile.tick(deltaT, screenSize, this.status);
 
-        const indexOfMe = this.players.findIndex(p => p.guid === this.myPlayerGuid);
+        const indexOfMe = this.players.findIndex(p => p.guid === this.me.guid);
         for (const [index, player] of this.players.entries()) {
             let relativeIndex = index - indexOfMe;
             if (relativeIndex < 0) {
                 relativeIndex = this.players.length + relativeIndex;
             }
-            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid === this.myPlayerGuid);
+            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid === this.me.guid);
         }
 
         this.afterTick?.();
         window.requestAnimationFrame(this.tick);
     }
 
+    public createRoom(guid: any) {
+        this.websocket.send(JSON.stringify({
+            action: 'room-create',
+            gameGuid: guid
+        }));
+    }
+
+    public joinRoom(guid: any) {
+        this.websocket.send(JSON.stringify({
+            action: 'join',
+            roomGuid: guid
+        }));
+    }
+
     public playCard(card: Card) {
-        if (this.currentPlayerGuid && this.currentPlayerGuid !== this.myPlayerGuid) {
+        if (this.currentPlayerGuid && this.currentPlayerGuid !== this.me.guid) {
             return;
         }
         this.websocket.send(JSON.stringify({
@@ -155,13 +186,25 @@ export class GameState {
     }
 
     private onWebsocketError(event){
-        console.log(event);
+        console.error(event);
     }
     
     private onWebsocketMessage(event) {
         const data = JSON.parse(event.data);
         console.log(data);
         switch (data.action) {
+            case 'player-created':
+                this.handlePlayerCreated(data.actionData);
+                break;
+            case 'room-create':
+                this.handleRoomCreated(data.actionData);
+                break;
+            case 'room-updated':
+                this.handleRoomUpdated(data.actionData);
+                break;
+            case 'room-removed':
+                this.handleRoomRemoved(data.actionData);
+                break;
             case 'join':
                 this.handleJoin(data.actionData);
                 break;
@@ -204,11 +247,29 @@ export class GameState {
         }
     }
 
+    private handlePlayerCreated(data) {
+        this.availableGames = data.games;
+        this.allRooms = data.rooms;
+        this.me = data.player;
+    }
+
+    private handleRoomCreated(data) {
+        this.allRooms.push(data.room);
+    }
+
+    private handleRoomUpdated(data) {
+        const index = this.allRooms.findIndex(r => r.guid === data.room.guid);
+        this.allRooms[index] = data.room;
+    }
+
+    private handleRoomRemoved(data) {
+        this.allRooms.splice(this.allRooms.findIndex(r => r.guid === data.roomGuid), 1);
+    }
+
     private handleJoin(data) {
-        this.myPlayerGuid = data.player.guid;
         this.isAdmin = data.player.isAdmin;
         this.players = data.players.map(p => new Player(p));
-        this.status = GameStatus.started;
+        this.status = GameStatus.lobby;
     }
 
     private handlePlayerJoined(data) {
@@ -220,12 +281,12 @@ export class GameState {
     }
 
     private async handleStart(data) {
-        if (this.status !== GameStatus.started) {
+        if (this.status !== GameStatus.lobby) {
             this.status = GameStatus.cleanup;
             await sleep(800);
         }
 
-        this.status = GameStatus.running;
+        this.status = GameStatus.started;
         this.pile.cards = [];
         this.stack.hasCards = true;
         this.winner;
@@ -327,11 +388,11 @@ export class GameState {
 
     private handleAdminChanged(data) {
         this.players.find(p => p.guid === data.playerGuid).isAdmin = true;
-        this.isAdmin = data.playerGuid === this.myPlayerGuid;
+        this.isAdmin = data.playerGuid === this.me.guid;
     }
 
     public handleFocusCard(data) {
-        if (data.playerGuid === this.myPlayerGuid) {
+        if (data.playerGuid === this.me.guid) {
             return;
         }
 
@@ -342,7 +403,7 @@ export class GameState {
     }
 
     public handleUnfocusCard(data) {
-        if (data.playerGuid === this.myPlayerGuid) {
+        if (data.playerGuid === this.me.guid) {
             return;
         }
 

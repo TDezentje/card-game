@@ -35,16 +35,20 @@ export class GameService {
     public getRooms() {
         const roomsToPlay = this.roomService.getRooms();
 
-        return roomsToPlay.map(rtp => {
-            name: rtp.name;
-            guid: rtp.guid;
-            isStarted: rtp.isStarted;
-            playersCount: rtp.players?.length;
-            maxPlayersCount: rtp.game.maxPlayers;
-            gameName: rtp.game.constructor.name;
-        });
+        return roomsToPlay.map(rtp => this.mapRoom(rtp));
     }
 
+    private mapRoom(room: Room) {
+        return {
+            name: room.name,
+            guid: room.guid,
+            isStarted: room.isStarted,
+            playersCount: room.players?.length,
+            maxPlayersCount: room.game.maxPlayers,
+            gameName: room.game.constructor.name
+        };
+    }
+    
     public createRoom(playerGuid: string, gameGuid: string) {
         let room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {
@@ -54,12 +58,23 @@ export class GameService {
 
         const game = this.games.find(g => (g as any).guid === gameGuid);
         const instance = new game();
+        instance.onPlayerLeft = this.onPlayerLeft.bind(this);
+        instance.onStart = this.onGameStarted.bind(this);
+        instance.onNextPlayer = this.onNextPlayer.bind(this);
+        instance.onPlayCard = this.onPlayCard.bind(this);
+        instance.onTakeCards = this.onTakeCards.bind(this);
+        instance.onEffect = this.onEffect.bind(this);
+        instance.onGameover = this.onGameover.bind(this);
+        instance.onFinish = this.onFinish.bind(this);
+
         room = this.roomService.createRoom(instance);
         this.sendMessageToEverybody(GameAction.RoomCreate, {
-            room
+            room: this.mapRoom(room)
         });
 
-        this.joinGame(room.guid, playerGuid);
+        this.joinGame(playerGuid, room.guid);
+
+        return room.guid;
     }
 
     public leaveRoom(playerGuid: string) {
@@ -77,6 +92,13 @@ export class GameService {
 
             if (room.players.length === 0) {
                 this.roomService.deleteRoom(room.guid);
+                this.sendMessageToEverybody(GameAction.RoomRemoved, {
+                    roomGuid: room.guid
+                });
+            } else {
+                this.sendMessageToEverybody(GameAction.RoomUpdated, {
+                    room: this.mapRoom(room)
+                });
             }
         }
     }
@@ -86,17 +108,6 @@ export class GameService {
 
         if (player.isAdmin) {
             const room = this.getRoomByPlayerGuid(playerGuid);
-
-            room.game.onStart = this.onGameStarted.bind(this);
-            room.game.onNextPlayer = this.onNextPlayer.bind(this);
-            room.game.onPlayCard = this.onPlayCard.bind(this);
-            room.game.onTakeCards = this.onTakeCards.bind(this);
-            room.game.onEffect = this.onEffect.bind(this);
-            room.game.onGameover = this.onGameover.bind(this);
-            room.game.onFinish = this.onFinish.bind(this);
-            room.game.onPlayerLeft = this.onPlayerLeft.bind(this);
-            room.game.onPlayerLeft = this.onPlayerLeft.bind(this);
-
             this.roomService.startRoom(room.guid);
             room.game.startGame(room.players);
         }
@@ -141,6 +152,7 @@ export class GameService {
         if (!room.isStarted) {
             if (room.players.length === 0) {
                 player.isAdmin = true;
+                room.name = player.name;
             }
             this.roomService.addUserToRoom(room.guid, player);
             this.playerService.updatePlayerColor(player.guid, room.players);
@@ -152,6 +164,9 @@ export class GameService {
 
             this.websocketService.sendMessageToRoom(room, GameAction.PlayerJoined, player, [player.guid]);
 
+            this.sendMessageToEverybody(GameAction.RoomUpdated, {
+                room: this.mapRoom(room)
+            });
             return {
                 room
             };
@@ -161,8 +176,8 @@ export class GameService {
     public leaveGame(playerGuid: string) {
         const room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {
-            this.leaveRoom(playerGuid);
             room.game.leaveGame(playerGuid);
+            this.leaveRoom(playerGuid);
         }
 
     }

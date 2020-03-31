@@ -22,7 +22,9 @@ export enum GameAction {
     UnfocusCard = 'unfocus-card',
     PlayerCreated = 'player-created',
     RoomCreate = 'room-create',
-    RoomLeave = 'room-leave'
+    RoomLeave = 'room-leave',
+    RoomUpdated = 'room-updated',
+    RoomRemoved = 'room-removed'
 }
 export class WebsocketService {
     private wssGame;
@@ -58,7 +60,8 @@ export class WebsocketService {
                         self.gameService.joinGame(this.playerGuid, turn.roomGuid);
                         break;
                     case GameAction.RoomCreate:
-                        self.gameService.createRoom(this.playerGuid, this.gameGuid);
+                        const roomGuid = self.gameService.createRoom(this.playerGuid, turn.gameGuid);
+                        ws.roomGuid = roomGuid;
                         break;
                     case GameAction.RoomLeave:
                         self.gameService.leaveRoom(this.playerGuid);
@@ -85,7 +88,7 @@ export class WebsocketService {
                         });
                         break;
                     case GameAction.UnfocusCard:
-                        self.sendMessageToRoom(ws.roomGuid, GameAction.UnfocusCard, {
+                        self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.UnfocusCard, {
                             playerGuid: result.player.guid,
                             cardGuid: turn.cardGuid
                         });

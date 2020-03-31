@@ -32,7 +32,7 @@ export abstract class GameLogic {
     public maxPlayers?: number;
     public players: GamePlayer[];
     protected startCardAmountInHand;
-    protected hasPile: boolean;
+    protected hasStack: boolean;
     protected cardsToUse?: Card[];
     protected cardsOnPile?: Card[];
 
@@ -55,7 +55,7 @@ export abstract class GameLogic {
             }    
         }
         
-        this.onStart(this, this.hasPile);
+        this.onStart(this, this.hasStack);
     }
     
     public leaveGame(playerGuid: string) {

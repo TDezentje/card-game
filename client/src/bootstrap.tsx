@@ -1,10 +1,10 @@
 import { h, render } from 'preact';
-import { App } from './components/app.element';
+import { AppElement } from './components/app.element';
 
 if (document.readyState == 'loading') {
     window.addEventListener('DOMContentLoaded', () => {
-        render(<App />, document.body);
+        render(<AppElement />, document.body);
     });
 } else {
-    render(<App />, document.body);
+    render(<AppElement />, document.body);
 }
