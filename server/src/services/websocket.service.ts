@@ -32,7 +32,7 @@ export class WebsocketService {
     public createWebserver() {
         this.gameService.loadGames();
 
-        this.wssGame = new WebSocket.Server({ host: '127.0.0.1', port: MODE === 'DEV' ? 8001 : 8080, perMessageDeflate : false });
+        this.wssGame = new WebSocket.Server({ port: MODE === 'DEV' ? 8001 : 8080, perMessageDeflate : false });
         this.wssGame.on('connection', (ws) => {
             const result = this.gameService.joinGame();
             ws.isAlive = true;
