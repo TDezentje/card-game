@@ -131,12 +131,12 @@ export function GameElement({
         <EffectIndicatorElement key="constant" gameState={gameState} indicator={gameState.activeConstantEffectIndicator} isConstant />
         <EffectIndicatorElement key="instant" gameState={gameState} indicator={gameState.activeEffectIndicator} />
 
-        <div class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
+        <div key="gameover" class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
             <span class={css.title}>GAME OVER!</span>
             {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Play again</a> : <span class={css.sub}>Wait for the gamemaster</span> }
         </div>
 
-        <div class={`${css.overlay} ${gameState.status === GameStatus.finished ? css.visible : ''}`}>
+        <div key="contratulations" class={`${css.overlay} ${gameState.status === GameStatus.finished ? css.visible : ''}`}>
             <span class={css.title}>Congratulations!</span>
             {
                 gameState.winner ? [
