@@ -1,7 +1,8 @@
 import express from 'express';
 
-const PORT = MODE === 'DEV' ? 8080 : 80;
+const PORT = 8080;
 const app = express();
+const server = require('http').createServer(app);
 const path = require('path');
 
 import { staticFiles } from './routes/static-files';
@@ -12,7 +13,16 @@ app.get('/*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
+const webServer = new WebsocketService();
+const socketServer = webServer.createWebserver();
+
+server.on('upgrade', function upgrade(request, socket, head) {
+    socketServer.handleUpgrade(request, socket, head, function done(ws) {
+        socketServer.emit('connection', ws, request);
+    });
+});
+
+server.listen(PORT, () => {
     console.log(`Redirect listening on port ${PORT}`);
     console.log('Press Ctrl+C to quit.');
 
@@ -28,7 +38,4 @@ app.listen(PORT, () => {
             ws.send(sessionId);
         });
     }
-
-    const webServer = new WebsocketService();
-    webServer.createWebserver();
 });

@@ -10,7 +10,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --only=production
 
-EXPOSE 80 8080
+EXPOSE 8080
 
 ADD ./dist ./
 

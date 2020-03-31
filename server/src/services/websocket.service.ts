@@ -35,7 +35,7 @@ export class WebsocketService {
     public createWebserver() {
         this.gameService.loadGames();
 
-        this.wssGame = new WebSocket.Server({ port: MODE === 'DEV' ? 8001 : 8080, perMessageDeflate : false });
+        this.wssGame = new WebSocket.Server({ noServer: true });
         this.wssGame.on('connection', (ws) => {
             const result = this.gameService.createPlayer();
             ws.isAlive = true;
@@ -97,6 +97,8 @@ export class WebsocketService {
                 self.gameService.leaveGame(this.playerGuid);
             });
         });
+
+        return this.wssGame;
     }
 
     public sendMessageToPlayer(playerGuid: string, action: GameAction, message: any) {
