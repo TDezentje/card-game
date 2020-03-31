@@ -1,21 +1,19 @@
 import { h, Component } from 'preact';
 import { GameElement } from './game/game.element';
 import { AppState } from 'logic/app-state';
+import { Router, route } from 'preact-router';
+import { sleep } from 'logic/helpers/animation.helper';
 
 const css = require('./app.element.scss');
 
-class State {
-    isCreatingRoom = false;
-    isJoiningRoom = false;
-}
-export class AppElement extends Component<{}, State> {
-    public state = new State();
+export class AppElement extends Component {
     public appState = new AppState();
     
     public constructor(props) {
         super(props);
         this.onCreateRoomClick = this.onCreateRoomClick.bind(this);
         this.onJoinRoomClick = this.onJoinRoomClick.bind(this);
+        this.handleRoute = this.handleRoute.bind(this);
     }
 
     public componentDidMount() {     
@@ -27,64 +25,57 @@ export class AppElement extends Component<{}, State> {
 
     public render() {
         return <div>
-            {
-                this.appState.status ? <GameElement gameState={this.appState} /> : null
-            }
-
-            {
-                !this.appState.status && !this.state.isCreatingRoom && !this.state.isJoiningRoom ? 
-                    <div class={css.form}>
-                        <span class={css.title}>Welcome</span>
-                        <button onClick={this.onCreateRoomClick}>Create room</button>
-                        <button onClick={this.onJoinRoomClick}>Join room</button>
-                    </div>
-                : null
-            }
-
-            {
-                !this.appState.status && this.state.isCreatingRoom ? 
-                    <div class={css.form}>
-                        <span class={css.title}>Which game do you want to play?</span>
-                        {
-                            this.appState.availableGames.map(g => <button onClick={() => this.createRoom(g.guid)}>{g.name}</button>)
-                        }
-                    </div>
-                : null
-            }
-
-            {
-                !this.appState.status && this.state.isJoiningRoom ? 
-                    <div class={css.form}>
-                        <span class={css.title}>Choose a room</span>
-                        {
-                            this.appState.allRooms?.filter(r => !r.isStarted).length === 0 ? <span class={css.sub}>No rooms found</span> : null
-                        }
-                        {
-                            this.appState.allRooms?.filter(r => !r.isStarted).map(r => <button class={css.room} disabled={(r.maxPlayersCount && r.playersCount === r.maxPlayersCount)} 
-                                    onClick={() => this.joinRoom(r.guid)}>
-                                <span>{r.name}</span>
-                                {r.maxPlayersCount ? <span>{r.playersCount}/{r.maxPlayersCount}</span> : null}
-                            </button>)
-                        }
-                    </div>
-                : null
-            }
-
+            <Router onChange={this.handleRoute}>
+                <div path="/" class={css.form}>
+                    <span class={css.title}>Welcome</span>
+                    <button onClick={this.onCreateRoomClick}>Create room</button>
+                    <button onClick={this.onJoinRoomClick}>Join room</button>
+                </div>
+                <div path="/create" class={css.form}>
+                    <span class={css.title}>Which game do you want to play?</span>
+                    {
+                        this.appState.availableGames?.map(g => <button onClick={() => this.createRoom(g.guid)}>{g.name}</button>)
+                    }
+                </div>
+                <div path="/join" class={css.form}>
+                    <span class={css.title}>Choose a room</span>
+                    {
+                        this.appState.allRooms?.filter(r => !r.isStarted).length === 0 ? <span class={css.sub}>No rooms found</span> : null
+                    }
+                    {
+                        this.appState.allRooms?.filter(r => !r.isStarted).map(r => <button class={css.room} disabled={(r.maxPlayersCount && r.playersCount === r.maxPlayersCount)} 
+                                onClick={() => this.joinRoom(r.guid)}>
+                            <span>{r.name}</span>
+                            {r.maxPlayersCount ? <span>{r.playersCount}/{r.maxPlayersCount}</span> : null}
+                        </button>)
+                    }
+                </div>
+                <div path="/game/:roomGuid">
+                    <GameElement gameState={this.appState} />
+                </div>
+            </Router>
         </div>;
     }
 
+    private async handleRoute(event) {
+        if (!this.appState?.status && event.current?.props?.roomGuid) {
+            while (!this.appState?.me) {
+                await sleep(500);
+            }
+            this.appState.joinRoom(event.current.props.roomGuid);
+        }
+
+        if (/^\/game\//.test(event.previous)) {
+            this.appState.leaveRoom();
+        }
+    }
+
     private onCreateRoomClick() {
-        this.setState({
-            isCreatingRoom: true,
-            isJoiningRoom: false
-        });
+        route('/create');
     }
 
     private onJoinRoomClick() {
-        this.setState({
-            isCreatingRoom: false,
-            isJoiningRoom: true
-        });
+        route('/join');
     }
 
     private createRoom(guid) {

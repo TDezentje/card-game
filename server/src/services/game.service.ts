@@ -149,6 +149,14 @@ export class GameService {
     public joinGame(playerGuid: string, roomGuid: string): { room: Room } {
         const player = this.playerService.getPlayer(playerGuid);
         const room = this.roomService.getRoom(roomGuid);
+
+        if (!room) {
+            this.websocketService.sendMessageToPlayer(playerGuid, GameAction.RoomRemoved, {
+                roomGuid
+            });
+            return;
+        }
+
         if (!room.isStarted) {
             if (room.players.length === 0) {
                 player.isAdmin = true;
@@ -159,7 +167,8 @@ export class GameService {
 
             this.websocketService.sendMessageToPlayer(playerGuid, GameAction.Join, {
                 player,
-                players: room.players
+                players: room.players,
+                roomGuid: room.guid
             });
 
             this.websocketService.sendMessageToRoom(room, GameAction.PlayerJoined, player, [player.guid]);
