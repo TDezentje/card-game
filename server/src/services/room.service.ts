@@ -31,7 +31,9 @@ export class RoomService {
 
     public startRoom(roomGuid): Room {
         const oldRoom = this.getRoom(roomGuid);
-        oldRoom.isStarted = true;
+        if (oldRoom.players.length >= oldRoom.game.minPlayers) {
+            oldRoom.isStarted = true;
+        }
 
         return oldRoom;
     }

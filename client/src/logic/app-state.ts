@@ -39,6 +39,11 @@ interface MultipleChoice {
     playerGuid: string;
 }
 
+interface Button {
+    text: string;
+    waitForClick: boolean;
+}
+
 export interface EffectIndicator {
     icon?: IconDefinition;
     text?: string;
@@ -46,6 +51,7 @@ export interface EffectIndicator {
     playerPositionDegrees?: number;
     color?: string;
     multipleChoice?: MultipleChoice;
+    button?: Button;
 }
 
 export class Room {
@@ -53,6 +59,7 @@ export class Room {
     name: string;
     isStarted: boolean;
     playersCount: number;
+    minPlayersCount: number;
     maxPlayersCount: number;
     gameName: string;
 }
@@ -188,6 +195,12 @@ export class AppState {
         }));
     }
 
+    public buttonClicked() {
+        this.websocket.send(JSON.stringify({
+            action: 'button-clicked'
+        }));
+    }
+
     public leaveRoom() {
         this.currentRoomGuid = '';
         this.status = undefined;
@@ -230,6 +243,9 @@ export class AppState {
                 break;
             case 'play':
                 this.handlePlay(data.actionData);
+                break;
+            case 'move-card':
+                this.handleMoveCard(data.actionData);
                 break;
             case 'next-player':
                 this.handleNextPlayer(data.actionData);
@@ -289,7 +305,9 @@ export class AppState {
         route(`/game/${data.roomGuid}`);
         this.isAdmin = data.player.isAdmin;
         this.players = data.players.map(p => new Player(p));
-        this.status = GameStatus.lobby;
+        if (this.players.length >= this.allRooms.find(r => r.guid === data.roomGuid).minPlayersCount) {
+            this.status = GameStatus.lobby;
+        }
     }
 
     private handlePlayerJoined(data) {
@@ -364,7 +382,7 @@ export class AppState {
     }
 
     private handlePlay(data) {
-        if (this.activeConstantEffectIndicator) {
+        if (this.activeConstantEffectIndicator && !this.activeConstantEffectIndicator.button?.waitForClick) {
             this.activeConstantEffectIndicator.visible = false;
         }
 
@@ -377,6 +395,24 @@ export class AppState {
         card.color = data.card.color;
         player.cards.splice(cardIndex, 1);
         this.pile.addCard(card);
+    }
+
+    private handleMoveCard(data) {
+        if (this.activeConstantEffectIndicator && !this.activeConstantEffectIndicator.button?.waitForClick) {
+            this.activeConstantEffectIndicator.visible = false;
+        }
+
+        const player = this.players.find(p => p.guid === data.playerGuid);
+        const cardIndex = player.cards.findIndex(c => c.guid === data.card.guid);
+        const receivingPlayer = this.players.find(p => p.guid === data.toPlayerGuid);
+
+        const card = player.cards[cardIndex];
+        card.corner = data.card.corner;
+        card.display = data.card.display;
+        card.color = data.card.color;
+
+        player.cards.splice(cardIndex, 1);
+        receivingPlayer.cards.push(card);
     }
 
     private handleNextPlayer(data) {
@@ -455,6 +491,9 @@ export class AppState {
                 break;
             case 'force-color':
                 this.handleForceColor(data.effectData);
+                break;
+            case 'button':
+                this.handleButton(data.effectData);
                 break;
         }
     }
@@ -546,8 +585,18 @@ export class AppState {
         });
     }
 
+    private handleButton(data) {
+        this.applyEffectIdenticator({
+            playerGuid: data.playerGuid,
+            button: {
+                text: data.buttonText,
+                waitForClick: data.waitForClick
+            }
+        });
+    }
+
     private async applyEffectIdenticator({
-        icon, text, playerGuid, noDelay, color, isConstant, multipleChoice
+        icon, text, playerGuid, noDelay, color, isConstant, multipleChoice, button
     }: {
         icon?: IconDefinition;
         text?: string;
@@ -556,12 +605,13 @@ export class AppState {
         color?: string;
         isConstant?: boolean;
         multipleChoice?: MultipleChoice;
+        button?: Button;
     }) {
         if (!noDelay) {
             await sleep(400);
         }
         
-        if ((isConstant || multipleChoice) && this.activeConstantEffectIndicator?.visible) {
+        if ((isConstant || multipleChoice || button) && this.activeConstantEffectIndicator?.visible) {
             this.activeConstantEffectIndicator.visible = false;
             await sleep(400);
         }
@@ -579,7 +629,8 @@ export class AppState {
             visible: true,
             playerPositionDegrees,
             color: color,
-            multipleChoice
+            multipleChoice,
+            button
         };
 
         if (isConstant || multipleChoice) {
@@ -589,7 +640,7 @@ export class AppState {
         }
 
 
-        if (!isConstant && !multipleChoice) {
+        if (!isConstant && !multipleChoice && !button) {
             setTimeout(async () => {
                 this.activeEffectIndicator.visible = false;
             }, 1400);

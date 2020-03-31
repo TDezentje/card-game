@@ -1,5 +1,6 @@
 import { TheMind } from 'games/themind';
 import { CrazyEights } from 'games/crazyEights';
+import { Donkey } from 'games/donkey';
 import { Player } from 'models/player.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
@@ -19,6 +20,7 @@ export class GameService {
 
     public loadGames() {
         this.games = [];
+        this.games.push(Donkey);
         this.games.push(TheMind);
         this.games.push(CrazyEights);
     }
@@ -44,11 +46,19 @@ export class GameService {
             guid: room.guid,
             isStarted: room.isStarted,
             playersCount: room.players?.length,
+            minPlayersCount: room.game.minPlayers,
             maxPlayersCount: room.game.maxPlayers,
             gameName: room.game.constructor.name
         };
     }
     
+    public buttonClicked(playerGuid: string){
+        const room = this.getRoomByPlayerGuid(playerGuid);
+        if (room) {
+            room.game.buttonClicked(playerGuid);
+        }
+    }
+
     public createRoom(playerGuid: string, gameGuid: string) {
         let room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {
@@ -62,6 +72,7 @@ export class GameService {
         instance.onStart = this.onGameStarted.bind(this);
         instance.onNextPlayer = this.onNextPlayer.bind(this);
         instance.onPlayCard = this.onPlayCard.bind(this);
+        instance.onMoveCard = this.onMoveCard.bind(this);
         instance.onTakeCards = this.onTakeCards.bind(this);
         instance.onEffect = this.onEffect.bind(this);
         instance.onGameover = this.onGameover.bind(this);
@@ -161,6 +172,8 @@ export class GameService {
             if (room.players.length === 0) {
                 player.isAdmin = true;
                 room.name = player.name;
+            } else {
+                player.isAdmin = false;
             }
             this.roomService.addUserToRoom(room.guid, player);
             this.playerService.updatePlayerColor(player.guid, room.players);
@@ -214,6 +227,22 @@ export class GameService {
             playerGuid,
             card
         });
+    }
+
+    public onMoveCard(game: GameLogic, playerGuid: string, toPlayerGuid: string, card: Card) {
+        this.websocketService.sendMessageToPlayer(toPlayerGuid, GameAction.MoveCard, {
+            playerGuid,
+            toPlayerGuid,
+            card
+        });
+
+        const publicCard = new Card();
+        publicCard.guid = card.guid;
+        this.sendMessageToRoom(game, GameAction.MoveCard, {
+            playerGuid,
+            toPlayerGuid,
+            card: publicCard
+        }, [toPlayerGuid]);
     }
 
     public onTakeCards(game: GameLogic, playerGuid: string, cards: Card[], hasStack: boolean) {

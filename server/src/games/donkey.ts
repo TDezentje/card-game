@@ -1,67 +1,114 @@
 import { Card } from 'models/card.model';
-import { GameLogic, GamePlayer, GameEffect, GameEffectType } from './game.logic';
+import { GameLogic, GameEffect, GameEffectType, GamePlayer } from './game.logic';
 import { Player } from 'models/player.model';
 
 export class Donkey extends GameLogic {
     public static gameName = "Donkey";
     public static guid = "f9508adf-cd29-4697-afea-4acc7a8ae96e";
-    private _currentPlayer: GamePlayer;
     protected hasStack = false;
 
-    private get currentPlayer() {
-        return this._currentPlayer;
-    }
-
-    private set currentPlayer(value: GamePlayer) {
-        this._currentPlayer = value;
-        this.onNextPlayer(this, value.guid);
-    }
-
-    private _rotationClockwise: boolean;
-    private get rotationClockwise() {
-        return this._rotationClockwise;
-    }
-
-    private set rotationClockwise(value: boolean) {
-        this._rotationClockwise = value;
-        this.onEffect(this, new GameEffect(GameEffectType.RotationChanged, {
-            rotationClockwise: value
-        }));
-    }
-
-    protected startCardAmountInHand = this.players.length * 4;
+    protected startCardAmountInHand = 4;
     public maxPlayers = 8;
+    public minPlayers = 1;
+
+    private whoClicked = [];
 
     public startGame(players: Player[]) {
         super.startGame(players);
+        
+        this.onEffect(this, new GameEffect(GameEffectType.RotationChanged, {
+            rotationClockwise: true
+        }));
 
-        this.currentPlayer = this.players[0];
-        this.rotationClockwise = true;
+        this.onEffect(this, new GameEffect(GameEffectType.Button, {
+            buttonText: "Ezel",
+            waitForClick: true
+        }));
     }
 
     public takeCards() {
     }
 
     public playCard(playerGuid: string, cardGuid: string) {
-        if (playerGuid !== this.currentPlayer.guid) {
+        let playerIndex = this.players.findIndex(p => p.guid === playerGuid);
+        const player = this.players[playerIndex];
+
+        playerIndex++;
+        if (playerIndex >= this.players.length) {
+            playerIndex = playerIndex % this.players.length;
+        }
+
+        const receivingPlayer = this.players[playerIndex];
+
+        if (receivingPlayer.cards.length === 5) {
             return;
         }
+
+        const card = player.cards.splice(player.cards.findIndex(c => c.guid === cardGuid), 1)?.[0];
+        receivingPlayer.cards.push(card);
+
+        this.onMoveCard(this, player.guid, receivingPlayer.guid, card);
     }
 
-    public answerMultipleChoice(playerGuid: string, answerGuid: string) {
+    public buttonClicked(playerGuid: string){
+        if (this.whoClicked.length > 0 && !this.whoClicked.includes(playerGuid)) {
+            this.whoClicked.push(playerGuid);
+        } else if(this.whoClicked.length > 0) {
+            return;
+        }
+
+        if (this.whoClicked.length === this.players.length) {
+            this.onGameover(this);
+            return;
+        }
+
+
+        const playerIndex = this.players.findIndex(p => p.guid === playerGuid);
+        const player = this.players[playerIndex];
+
+        if (!this.isValidHand(player)) {
+            this.onGameover(this);
+            return;
+        }
+
+        this.whoClicked.push(player.guid);
+        this.onEffect(this, new GameEffect(GameEffectType.Button, {
+            buttonText: player.name,
+            playerGuid: player.guid,
+            waitForClick: true
+        }));
     }
 
-    protected isValidCard(card: Card) {
-        return true;
+    public isValidHand(player: GamePlayer) {
+        const uniqueCardsInHand = player.cards.map(x => x.corner.leftTop).filter(function (value, index, self) {
+            return self.indexOf(value) === index;
+        });
+        for (const uniqueCard of uniqueCardsInHand) {
+            const count = player.cards.reduce((acc, card) => card.corner.leftTop === uniqueCard ? ++acc : acc, 0);
+            if (count === 4) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public answerMultipleChoice() {
     }
 
     public nextGame() {
-        this.resetGame();
         this.startGame(this.players);
     }
 
     public resetGame() {
+        this.whoClicked = [];
         this.cardsToUse = JSON.parse(JSON.stringify(Donkey.cards));
+        this.cardsToUse.sort((a, b) => {
+            if (a.display > b.display) return 1;
+            if (b.display > a.display) return -1;
+
+            return 0;
+        }).splice(0, Donkey.cards.length - (this.players.length * this.startCardAmountInHand));
         this.cardsOnPile = [];
     }
 

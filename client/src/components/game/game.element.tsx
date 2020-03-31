@@ -14,7 +14,11 @@ const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
         gameState.selectOption(guid);
     };
 
-    return <div class={`${css.effectIndicatorContainer} ${indicator?.multipleChoice ? css.multipleChoice : ''}`} style={{width: gameState.table.size, height: gameState.table.size}}>
+    const onButtonClick = () => {
+        gameState.buttonClicked();
+    };
+
+    return <div class={`${css.effectIndicatorContainer} ${indicator?.multipleChoice ? css.multipleChoice : ''} ${indicator?.button ? css.button : ''}`} style={{width: gameState.table.size, height: gameState.table.size}}>
         <div class={`${css.effectIndicator} ${indicator?.visible ? css.visible : ''} ${isConstant && !indicator?.multipleChoice ? css.constant : ''}`}>
             <IconElement icon={indicator?.icon} />
             <span class={indicator?.color ? css.background : ''} style={{color: indicator?.color}}>{indicator?.text}</span>
@@ -44,6 +48,14 @@ const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
                 indicator?.multipleChoice?.options.map(o => 
                     <button onClick={() => onOptionClick(o.guid)} disabled ={indicator.multipleChoice.playerGuid !== gameState.me.guid} 
                             style={{color: o.color, transform: `translate(-50%, -50%) translate(${o.x}px, ${o.y}px)`}}><span>{o.text}</span></button>)
+            }
+
+            {
+                indicator?.button ? 
+                    <button class={css.background} onClick={onButtonClick}>
+                        <span>{indicator.button.text}</span>
+                    </button>
+                    :null
             }
             
         </div>

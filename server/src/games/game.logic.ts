@@ -8,7 +8,8 @@ export enum GameEffectType {
     TakeCard = 'take-card',
     MultipleChoice = 'multiple-choice',
     ForceColor = 'force-color',
-    KeepTurn = 'keep-turn'
+    KeepTurn = 'keep-turn',
+    Button = 'button'
 }
 
 export class GameEffect {
@@ -31,11 +32,13 @@ export abstract class GameLogic {
     public static guid: string;
     public maxPlayers?: number;
     public players: GamePlayer[];
+    public minPlayers?: number;
     protected startCardAmountInHand;
     protected hasStack: boolean;
     protected cardsToUse?: Card[];
     protected cardsOnPile?: Card[];
 
+    public abstract buttonClicked(_playerGuid: string);
     public abstract nextGame();
     public abstract resetGame();
     public abstract playCard(_playerGuid: string, cardGuid: string);
@@ -43,9 +46,9 @@ export abstract class GameLogic {
     public abstract takeCards(_playerGuid: string);
     
     public startGame(players: Player[]) {
-        this.resetGame();
         this.players = players.map(p => new GamePlayer(p));
-        
+        this.resetGame();
+
         for (const player of this.players) {
             player.cards = [];
             for (let idx = 0; idx < this.startCardAmountInHand; idx++) {
@@ -77,6 +80,7 @@ export abstract class GameLogic {
 
     public onStart: (game: GameLogic, hasStack: boolean) => void;
     public onPlayCard: (game: GameLogic, playerGuid: string, card: Card) => void;
+    public onMoveCard: (game: GameLogic, playerGuid: string, toPlayerGuid: string, card: Card) => void;
     public onTakeCards: (game: GameLogic, playerGuid: string, card: Card[], hasStack: boolean) => void;
     public onGameover: (game: GameLogic) => void;
     public onFinish: (game: GameLogic, playerGuid?: string) => void;
