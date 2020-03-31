@@ -6,6 +6,7 @@ import { Card } from './models/card.model';
 import { sleep } from './helpers/animation.helper';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { faSyncAlt, faBan, faRedoAlt } from '@fortawesome/free-solid-svg-icons';
+import { route } from 'preact-router';
 
 export enum GameStatus {
     lobby = 1,
@@ -66,6 +67,7 @@ export class AppState {
     public allRooms: Room[];
     public me: Player;
 
+    public currentRoomGuid: string;
     public players: Player[];
     public currentPlayerGuid: string;
     public stack: CardStack;
@@ -129,6 +131,7 @@ export class AppState {
     }
 
     public joinRoom(guid: any) {
+        this.currentRoomGuid = guid;
         this.websocket.send(JSON.stringify({
             action: 'join',
             roomGuid: guid
@@ -182,6 +185,14 @@ export class AppState {
         this.websocket.send(JSON.stringify({
             action: 'effect-response',
             optionGuid: guid
+        }));
+    }
+
+    public leaveRoom() {
+        this.currentRoomGuid = '';
+        this.status = undefined;
+        this.websocket.send(JSON.stringify({
+            action: 'room-leave',
         }));
     }
 
@@ -263,10 +274,19 @@ export class AppState {
     }
 
     private handleRoomRemoved(data) {
-        this.allRooms.splice(this.allRooms.findIndex(r => r.guid === data.roomGuid), 1);
+        if (this.currentRoomGuid === data.roomGuid) {
+            route('/');
+            this.currentRoomGuid = '';
+        }
+
+        const index = this.allRooms.findIndex(r => r.guid === data.roomGuid);
+        if(index > -1) {
+            this.allRooms.splice(index, 1);
+        }
     }
 
     private handleJoin(data) {
+        route(`/game/${data.roomGuid}`);
         this.isAdmin = data.player.isAdmin;
         this.players = data.players.map(p => new Player(p));
         this.status = GameStatus.lobby;

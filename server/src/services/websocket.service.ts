@@ -64,7 +64,7 @@ export class WebsocketService {
                         ws.roomGuid = roomGuid;
                         break;
                     case GameAction.RoomLeave:
-                        self.gameService.leaveRoom(this.playerGuid);
+                        self.gameService.leaveGame(this.playerGuid);
                         break;
                     case GameAction.Start:
                         self.gameService.startGame(this.playerGuid);
