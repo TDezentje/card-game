@@ -46,6 +46,8 @@ export class AppElement extends Component {
                             
                         </button>)
                     }
+
+                    <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/join" class={css.form}>
                     <span class={css.title}>Choose a room</span>
@@ -58,13 +60,15 @@ export class AppElement extends Component {
                             <span>{r.name}</span>
                             {r.maxPlayersCount ? <span>{r.playersCount}/{r.maxPlayersCount}</span> : null}
                         </button>)
+
                     }
+                    <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/settings" class={css.form}>
                     <span class={css.title}>Settings</span>
                     <label for="name" />
                     <input id="name" name="name" value={this.appState.me?.name} onInput={e => this.onNameChanged(e)} />
-                    <button onClick={this.onBackClick}>Back</button>
+                    <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/game/:roomGuid">
                     <GameElement gameState={this.appState} />

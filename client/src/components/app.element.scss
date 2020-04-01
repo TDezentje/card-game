@@ -70,8 +70,13 @@ body {
         }
     }
 
+    .back {
+        margin-top: 1rem;
+        border-width: 1px;
+    }
+
     input {
-        margin-bottom: 1rem;
+        margin-bottom: .5rem;
         border-radius: 5px;
         padding: 8px;
         font-size: 1.5rem;
