@@ -161,7 +161,7 @@ export class GameService {
         const player = this.playerService.getPlayer(playerGuid);
         const room = this.roomService.getRoom(roomGuid);
 
-        if (!room) {
+        if (!room || room.players.length === room.game.maxPlayers) {
             this.websocketService.sendMessageToPlayer(playerGuid, GameAction.RoomRemoved, {
                 roomGuid
             });

@@ -80,6 +80,7 @@ export class AppState {
     public stack: CardStack;
     public pile: CardPile;
 
+    public hasMinimumPlayers: boolean;
     public isAdmin: boolean;
     public status: GameStatus;
     public rotation: GameRotation = GameRotation.None;
@@ -290,7 +291,7 @@ export class AppState {
     }
 
     private handleRoomRemoved(data) {
-        if (this.currentRoomGuid === data.roomGuid) {
+        if (!this.currentRoomGuid || this.currentRoomGuid === data.roomGuid) {
             route('/');
             this.currentRoomGuid = '';
         }
@@ -305,17 +306,23 @@ export class AppState {
         route(`/game/${data.roomGuid}`);
         this.isAdmin = data.player.isAdmin;
         this.players = data.players.map(p => new Player(p));
-        // if (this.players.length >= this.allRooms.find(r => r.guid === data.roomGuid).minPlayersCount) {
-            this.status = GameStatus.lobby;
-        // }
+        this.currentRoomGuid = data.roomGuid;
+        this.status = GameStatus.lobby;
     }
 
     private handlePlayerJoined(data) {
         this.players.push(new Player(data));
+        
+        if (this.isAdmin && this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount) {
+            this.hasMinimumPlayers = true;
+        }
     }
 
     private handlePlayerleft(data) {
         this.players.splice(this.players.findIndex(p => p.guid === data.playerGuid), 1);
+        if (this.isAdmin && this.players.length < this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount) {
+            this.hasMinimumPlayers = false;
+        }
     }
 
     private async handleStart(data) {

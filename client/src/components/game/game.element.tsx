@@ -137,7 +137,7 @@ export function GameElement({
         }
 
         {
-            gameState.status === GameStatus.lobby && gameState.isAdmin ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
+            gameState.status === GameStatus.lobby && gameState.isAdmin && gameState.hasMinimumPlayers ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
         }
 
         <EffectIndicatorElement key="constant" gameState={gameState} indicator={gameState.activeConstantEffectIndicator} isConstant />
