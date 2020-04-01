@@ -30,6 +30,7 @@ export class AppElement extends Component {
                     <span class={css.title}>Welcome</span>
                     <button onClick={this.onCreateRoomClick}>Create room</button>
                     <button onClick={this.onJoinRoomClick}>Join room</button>
+                    <button onClick={this.onSettingsClick}>Settings</button>
                 </div>
                 <div path="/create" class={css.form}>
                     <span class={css.title}>Which game do you want to play?</span>
@@ -49,6 +50,12 @@ export class AppElement extends Component {
                             {r.maxPlayersCount ? <span>{r.playersCount}/{r.maxPlayersCount}</span> : null}
                         </button>)
                     }
+                </div>
+                <div path="/settings" class={css.form}>
+                    <span class={css.title}>Settings</span>
+                    <label for="name" />
+                    <input id="name" name="name" value={this.appState.me?.name} onInput={e => this.onNameChanged(e)} />
+                    <button onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/game/:roomGuid">
                     <GameElement gameState={this.appState} />
@@ -77,6 +84,14 @@ export class AppElement extends Component {
     private onJoinRoomClick() {
         route('/join');
     }
+    
+    private onSettingsClick() {
+        route('/settings');
+    }
+
+    private onNameChanged(event) {
+        this.appState.changeName(event.currentTarget.value);
+    }
 
     private createRoom(guid) {
         this.appState.createRoom(guid);
@@ -84,5 +99,10 @@ export class AppElement extends Component {
 
     private joinRoom(guid) {
         this.appState.joinRoom(guid);
+    }
+
+    private onBackClick(event) {
+        event.preventDefault();
+        history.back();
     }
 }

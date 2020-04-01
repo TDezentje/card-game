@@ -4,4 +4,5 @@ export class Turn {
     optionGuid?: string;
     roomGuid?: string;
     gameGuid?: string;
+    name?: string;
 }

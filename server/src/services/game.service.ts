@@ -60,6 +60,11 @@ export class GameService {
         }
     }
 
+    public changePlayerName(playerGuid: string, name: string) {
+        const player = this.playerService.getPlayer(playerGuid);
+        player.name = name;
+    }
+
     public createRoom(playerGuid: string, gameGuid: string) {
         let room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {

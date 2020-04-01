@@ -215,6 +215,15 @@ export class AppState {
         }));
     }
 
+    public changeName(name) {
+        window.localStorage.setItem('name', name);
+        this.me.name = name;
+        this.websocket.send(JSON.stringify({
+            action: 'change-player-name',
+            name
+        }));
+    }
+
     private onWebsocketError(event){
         console.error(event);
     }
@@ -278,9 +287,20 @@ export class AppState {
     }
 
     private handlePlayerCreated(data) {
+        const previousName = window.localStorage.getItem('name');
+
+        if (previousName) {
+            data.player.name = previousName;
+        }
+
         this.availableGames = data.games;
         this.allRooms = data.rooms;
         this.me = data.player;
+
+        
+        if (previousName) {
+            this.changeName(previousName);
+        }
     }
 
     private handleRoomCreated(data) {
