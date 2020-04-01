@@ -305,9 +305,9 @@ export class AppState {
         route(`/game/${data.roomGuid}`);
         this.isAdmin = data.player.isAdmin;
         this.players = data.players.map(p => new Player(p));
-        if (this.players.length >= this.allRooms.find(r => r.guid === data.roomGuid).minPlayersCount) {
+        // if (this.players.length >= this.allRooms.find(r => r.guid === data.roomGuid).minPlayersCount) {
             this.status = GameStatus.lobby;
-        }
+        // }
     }
 
     private handlePlayerJoined(data) {
