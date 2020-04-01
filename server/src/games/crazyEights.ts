@@ -111,7 +111,7 @@ export class CrazyEights extends GameLogic {
 
         if (previousPlayer.cards.length === 0) {
             this.onGameover(this, {
-                text: `CONGRATULATIONS! ${previousPlayer.name} won`,
+                text: `CONGRATULATIONS!\n${previousPlayer.name} won`,
                 buttonText: 'Next game',
                 altText: 'Wait for the gamemaster'
             });
