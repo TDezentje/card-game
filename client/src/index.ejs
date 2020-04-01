@@ -5,8 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
     <base href="/">
-
-
     <% if (MODE === 'DEV') { %>
         <script type="text/javascript">
             var currentId = '';
@@ -42,7 +40,8 @@
             <script type="text/javascript" src="<%= file %>"></script>
         <% } %>
     <% } %>
-    <% if (MODE === 'PROD' || MODE === 'UITST') { %>
+    <% if (MODE === 'PROD') { %>
+        <script data-ad-client="ca-pub-1806489690081425" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         <% for (file of htmlWebpackPlugin.files.js) { %>
             <script type="text/javascript">
                 <%= compilation.assets[file].source() %>
