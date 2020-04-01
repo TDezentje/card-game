@@ -44,7 +44,7 @@ export class CrazyEights extends GameLogic {
     public startGame(players: Player[]) {
         super.startGame(players);
 
-        this.currentPlayer = this.players[0];
+        this.currentPlayer = this.players[Math.floor(Math.random() * Math.floor(this.players.length))];
         this.rotationClockwise = true;
     }
 
