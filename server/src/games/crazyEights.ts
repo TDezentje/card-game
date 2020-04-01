@@ -563,6 +563,7 @@ export class CrazyEights extends GameLogic {
         {
             guid: 'c21dea09-4ca1-4f1d-a1e9-5917d07aad49',
             display: '🤹',
+            color: '#f91c2c',
             corner: { leftTop: '✪', leftBottom: '✪', rightTop: '✪', rightBottom: '✪' }
         }
     ]
