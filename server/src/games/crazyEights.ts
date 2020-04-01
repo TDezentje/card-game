@@ -110,7 +110,11 @@ export class CrazyEights extends GameLogic {
         this.onPlayCard(this, playerGuid, card);
 
         if (previousPlayer.cards.length === 0) {
-            this.onFinish(this, previousPlayer.guid);
+            this.onGameover(this, {
+                text: `CONGRATULATIONS! ${previousPlayer.name} won`,
+                buttonText: 'Next game',
+                altText: 'Wait for the gamemaster'
+            });
         }
 
         if (this.cardsOnPile.length > 5 && this.cardsToUse.length === 0) {

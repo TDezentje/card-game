@@ -12,8 +12,7 @@ export enum GameStatus {
     lobby = 1,
     started = 2,
     gameover = 3,
-    finished = 4,
-    cleanup = 5
+    cleanup = 4
 }
 
 export enum GameRotation {
@@ -69,6 +68,12 @@ export class Game {
     name: string;
 }
 
+export class GameEndState {
+    text: string;
+    buttonText: string;
+    altText: string;
+}
+
 export class AppState {
     public availableGames: Game[];
     public allRooms: Room[];
@@ -85,7 +90,7 @@ export class AppState {
     public status: GameStatus;
     public rotation: GameRotation = GameRotation.None;
 
-    public winner: Player;
+    public endState: GameEndState;
     public table: Table;
     public websocket = new WebSocket(MODE === 'DEV' ? `ws://${location.hostname}:8080` : `wss://${location.hostname}`);
     public afterTick: () => void;
@@ -258,10 +263,7 @@ export class AppState {
                 this.handleEffect(data.actionData);
                 break;
             case 'gameover':
-                this.handleGameOver();
-                break;
-            case 'finished':
-                this.handleFinished(data.actionData);
+                this.handleGameOver(data.actionData);
                 break;
             case 'focus-card':
                 this.handleFocusCard(data.actionData);
@@ -334,7 +336,7 @@ export class AppState {
         this.status = GameStatus.started;
         this.pile.cards = [];
         this.stack.hasCards = true;
-        this.winner;
+        this.endState = null;
 
         if (this.activeConstantEffectIndicator) {
             this.activeConstantEffectIndicator.visible = false;
@@ -434,18 +436,11 @@ export class AppState {
         }
     }
 
-    private handleGameOver() {
+    private handleGameOver(data) {
         setTimeout(() => {
             this.status = GameStatus.gameover;
             this.rotation = GameRotation.None;
-        }, 600);
-    }
-
-    private handleFinished(data) {
-        setTimeout(() => {
-            this.status = GameStatus.finished;
-            this.rotation = GameRotation.None;
-            this.winner = this.players.find(p => p.guid === data?.playerGuid);
+            this.endState = data;
         }, 600);
     }
 
@@ -640,7 +635,7 @@ export class AppState {
             button
         };
 
-        if (isConstant || multipleChoice) {
+        if (isConstant || multipleChoice || button) {
             this.activeConstantEffectIndicator = effect;
         } else {
             this.activeEffectIndicator = effect;

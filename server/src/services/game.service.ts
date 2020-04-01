@@ -1,6 +1,6 @@
 import { TheMind } from 'games/themind';
 import { CrazyEights } from 'games/crazyEights';
-import { Donkey } from 'games/donkey';
+import { Burro } from 'games/burro';
 import { Player } from 'models/player.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
@@ -8,6 +8,7 @@ import { GameLogic, GameEffect } from 'games/game.logic';
 import { Room } from 'models/room.model';
 import { WebsocketService, GameAction } from './websocket.service';
 import { Card } from 'models/card.model';
+import { GameEndState } from 'models/end-state.model';
 
 export class GameService {
     private games: { new(): GameLogic }[] = [];
@@ -20,7 +21,7 @@ export class GameService {
 
     public loadGames() {
         this.games = [];
-        this.games.push(Donkey);
+        this.games.push(Burro);
         this.games.push(TheMind);
         this.games.push(CrazyEights);
     }
@@ -76,7 +77,6 @@ export class GameService {
         instance.onTakeCards = this.onTakeCards.bind(this);
         instance.onEffect = this.onEffect.bind(this);
         instance.onGameover = this.onGameover.bind(this);
-        instance.onFinish = this.onFinish.bind(this);
 
         room = this.roomService.createRoom(instance);
         this.sendMessageToEverybody(GameAction.RoomCreate, {
@@ -262,14 +262,8 @@ export class GameService {
         });
     }
 
-    public onGameover(game: GameLogic) {
-        this.sendMessageToRoom(game, GameAction.Gameover);
-    }
-
-    public onFinish(game: GameLogic, playerGuid?: string) {
-        this.sendMessageToRoom(game, GameAction.Finished, {
-            playerGuid
-        });
+    public onGameover(game: GameLogic, data: GameEndState) {
+        this.sendMessageToRoom(game, GameAction.Gameover, data);
     }
 
     public onEffect(game: GameLogic, gameEffect: GameEffect) {

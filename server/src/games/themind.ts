@@ -22,14 +22,22 @@ export class TheMind extends GameLogic {
 
         if (!this.isValidCard(cardGuid)) {
             this.isGameOver = true;
-            this.onGameover(this);
+            this.onGameover(this, {
+                text: 'GAME OVER!',
+                buttonText: 'Retry',
+                altText: 'Wait for the gamemaster'
+            });
             return;
         }
 
         this.cardsOnPile.push(card);
 
         if (this.players.every(p => p.cards.length === 0)) {
-            this.onFinish(this);
+            this.onGameover(this, {
+                text: 'CONGRATULATIONS!',
+                buttonText: 'Next level',
+                altText: 'Wait for the gamemaster'
+            });
         }
     }
 

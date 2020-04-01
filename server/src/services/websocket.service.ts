@@ -13,7 +13,6 @@ export enum GameAction {
     Play = 'play',
     MoveCard = 'move-card',
     Gameover = 'gameover',
-    Finished = 'finished',
     PlayerLeft = 'player-left',
     NextGame = 'next-game',
     TakeCards = 'take-cards',

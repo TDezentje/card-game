@@ -1,5 +1,6 @@
 import { Card } from 'models/card.model';
 import { Player } from 'models/player.model';
+import { GameEndState } from 'models/end-state.model';
 
 export enum GameEffectType {
     RotationChanged = 'rotation-changed',
@@ -82,8 +83,7 @@ export abstract class GameLogic {
     public onPlayCard: (game: GameLogic, playerGuid: string, card: Card) => void;
     public onMoveCard: (game: GameLogic, playerGuid: string, toPlayerGuid: string, card: Card) => void;
     public onTakeCards: (game: GameLogic, playerGuid: string, card: Card[], hasStack: boolean) => void;
-    public onGameover: (game: GameLogic) => void;
-    public onFinish: (game: GameLogic, playerGuid?: string) => void;
+    public onGameover: (game: GameLogic, endState: GameEndState) => void;
     public onNextPlayer: (game: GameLogic, playerGuid: string) => void;
     public onEffect: (game: GameLogic, gameEffect: GameEffect) => void;
     public onPlayerLeft: (game: GameLogic, playerGuid: string) => void;

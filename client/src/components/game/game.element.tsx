@@ -144,19 +144,8 @@ export function GameElement({
         <EffectIndicatorElement key="instant" gameState={gameState} indicator={gameState.activeEffectIndicator} />
 
         <div key="gameover" class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
-            <span class={css.title}>GAME OVER!</span>
-            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Play again</a> : <span class={css.sub}>Wait for the gamemaster</span> }
-        </div>
-
-        <div key="contratulations" class={`${css.overlay} ${gameState.status === GameStatus.finished ? css.visible : ''}`}>
-            <span class={css.title}>Congratulations!</span>
-            {
-                gameState.winner ? [
-                    <span class={css.title} style={{color:gameState.winner.color}}>{gameState.winner.name}</span>,
-                    <span class={css.title}>has won</span>
-                 ] : null
-            }
-            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>Next game</a> : <span class={css.sub}>Wait for the gamemaster</span> }
+            {gameState.endState?.text.split('\n').map(s => <span class={css.title}>{s}</span>)}
+            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>{gameState.endState?.buttonText}</a> : <span class={css.sub}>{gameState.endState?.altText}</span> }
         </div>
     </div>;
 }

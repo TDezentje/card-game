@@ -2,8 +2,8 @@ import { Card } from 'models/card.model';
 import { GameLogic, GameEffect, GameEffectType, GamePlayer } from './game.logic';
 import { Player } from 'models/player.model';
 
-export class Donkey extends GameLogic {
-    public static gameName = "Donkey";
+export class Burro extends GameLogic {
+    public static gameName = "Burro";
     public static guid = "f9508adf-cd29-4697-afea-4acc7a8ae96e";
     protected hasStack = false;
 
@@ -11,6 +11,10 @@ export class Donkey extends GameLogic {
     public maxPlayers = 8;
     public minPlayers = 1;
 
+    private score: {
+        [key: string]: string[];   
+    } = {};
+    private invalidHandClicked: boolean;
     private whoClicked = [];
 
     public startGame(players: Player[]) {
@@ -21,7 +25,7 @@ export class Donkey extends GameLogic {
         }));
 
         this.onEffect(this, new GameEffect(GameEffectType.Button, {
-            buttonText: "Ezel",
+            buttonText: "Burro",
             waitForClick: true
         }));
     }
@@ -30,6 +34,10 @@ export class Donkey extends GameLogic {
     }
 
     public playCard(playerGuid: string, cardGuid: string) {
+        if (this.whoClicked.includes(playerGuid)) {
+            return;
+        }
+
         let playerIndex = this.players.findIndex(p => p.guid === playerGuid);
         const player = this.players[playerIndex];
 
@@ -51,14 +59,19 @@ export class Donkey extends GameLogic {
     }
 
     public buttonClicked(playerGuid: string){
-        if (this.whoClicked.length > 0 && !this.whoClicked.includes(playerGuid)) {
-            this.whoClicked.push(playerGuid);
-        } else if(this.whoClicked.length > 0) {
+        if (this.invalidHandClicked) {
             return;
         }
 
-        if (this.whoClicked.length === this.players.length) {
-            this.onGameover(this);
+        if (this.whoClicked.length > 0 && !this.whoClicked.includes(playerGuid)) {
+            this.whoClicked.push(playerGuid);
+
+            if (this.whoClicked.length === this.players.length) {
+                this.playerLost(this.players.find(p => p.guid === this.whoClicked[this.whoClicked.length - 1]));
+            }
+
+            return;
+        } else if(this.whoClicked.length > 0) {
             return;
         }
 
@@ -67,7 +80,8 @@ export class Donkey extends GameLogic {
         const player = this.players[playerIndex];
 
         if (!this.isValidHand(player)) {
-            this.onGameover(this);
+            this.invalidHandClicked = true;
+            this.playerLost(player);
             return;
         }
 
@@ -77,6 +91,21 @@ export class Donkey extends GameLogic {
             playerGuid: player.guid,
             waitForClick: true
         }));
+    }
+
+    private playerLost(player: Player) {
+        let playerScore = this.score[player.guid];
+        if (!playerScore) {
+            playerScore = this.score[player.guid] = [];
+        }
+
+        playerScore.push(Burro.gameName.substr(playerScore.length, 1));
+
+        this.onGameover(this, {
+            text: `${player.name}\n${playerScore.join(' ')}${new Array(Burro.gameName.length - playerScore.length + 1).join(' _')}`,
+            buttonText: 'Next game',
+            altText: 'Wait for the gamemaster'
+        });
     }
 
     public isValidHand(player: GamePlayer) {
@@ -101,14 +130,19 @@ export class Donkey extends GameLogic {
     }
 
     public resetGame() {
+        if (Object.values(this.score).some(value => value.length === Burro.gameName.length)) {
+            this.score = {};
+        }
+
+        this.invalidHandClicked = false;
         this.whoClicked = [];
-        this.cardsToUse = JSON.parse(JSON.stringify(Donkey.cards));
+        this.cardsToUse = JSON.parse(JSON.stringify(Burro.cards));
         this.cardsToUse.sort((a, b) => {
             if (a.display > b.display) return 1;
             if (b.display > a.display) return -1;
 
             return 0;
-        }).splice(0, Donkey.cards.length - (this.players.length * this.startCardAmountInHand));
+        }).splice(0, Burro.cards.length - (this.players.length * this.startCardAmountInHand));
         this.cardsOnPile = [];
     }
 
