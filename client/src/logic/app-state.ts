@@ -66,6 +66,8 @@ export class Room {
 export class Game {
     guid: string;
     name: string;
+    minPlayersCount: number;
+    maxPlayersCount: number;
 }
 
 export class GameEndState {

@@ -55,6 +55,19 @@ body {
         &:disabled {
             opacity: .7;
         }
+
+        &.game {
+            span {
+                display: inline-block;
+            }
+
+            span:first-child {
+                width: 100%;
+            }
+            span:nth-child(2) {
+                margin-right: 8px;
+            }
+        }
     }
 
     input {

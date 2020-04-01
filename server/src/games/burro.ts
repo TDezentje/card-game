@@ -5,11 +5,11 @@ import { Player } from 'models/player.model';
 export class Burro extends GameLogic {
     public static gameName = "Burro";
     public static guid = "f9508adf-cd29-4697-afea-4acc7a8ae96e";
+    public static minPlayers = 3;
+    public static maxPlayers = 8;
     protected hasStack = false;
 
     protected startCardAmountInHand = 4;
-    public maxPlayers = 8;
-    public minPlayers = 1;
 
     private score: {
         [key: string]: string[];   

@@ -31,7 +31,7 @@ export class RoomService {
 
     public startRoom(roomGuid): Room {
         const oldRoom = this.getRoom(roomGuid);
-        if (oldRoom.players.length >= oldRoom.game.minPlayers) {
+        if (oldRoom.players.length >= Object.getPrototypeOf(oldRoom.game).constructor.minPlayers) {
             oldRoom.isStarted = true;
         }
 
@@ -45,8 +45,8 @@ export class RoomService {
     public addUserToRoom(roomGuid: string, player: Player) {
         const room = this.getRoom(roomGuid);
         room.players.push(player);
-        if (room.game.maxPlayers){
-            if(room.players.length >= room.game.maxPlayers){
+        if (Object.getPrototypeOf(room.game).constructor.maxPlayers){
+            if(room.players.length >= Object.getPrototypeOf(room.game).constructor.maxPlayers){
                 room.isStarted = true;
             }
         }

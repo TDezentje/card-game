@@ -30,11 +30,13 @@ export class GameService {
         return this.games.map(g => {
             return {
                 name: (g as any).gameName,
-                guid: (g as any).guid
+                guid: (g as any).guid,
+                minPlayersCount: (g as any).minPlayers,
+                maxPlayersCount: (g as any).maxPlayers
             };
         });
     }
-
+    
     public getRooms() {
         const roomsToPlay = this.roomService.getRooms();
 
@@ -47,8 +49,8 @@ export class GameService {
             guid: room.guid,
             isStarted: room.isStarted,
             playersCount: room.players?.length,
-            minPlayersCount: room.game.minPlayers,
-            maxPlayersCount: room.game.maxPlayers,
+            minPlayersCount: Object.getPrototypeOf(room.game).constructor.minPlayers,
+            maxPlayersCount: Object.getPrototypeOf(room.game).constructor.maxPlayers,
             gameName: room.game.constructor.name
         };
     }
@@ -166,7 +168,7 @@ export class GameService {
         const player = this.playerService.getPlayer(playerGuid);
         const room = this.roomService.getRoom(roomGuid);
 
-        if (!room || room.players.length === room.game.maxPlayers) {
+        if (!room || room.players.length === Object.getPrototypeOf(room.game).constructor.maxPlayers) {
             this.websocketService.sendMessageToPlayer(playerGuid, GameAction.RoomRemoved, {
                 roomGuid
             });
@@ -278,7 +280,7 @@ export class GameService {
     public onPlayerLeft(game: GameLogic, playerGuid: string) {
         this.sendMessageToRoom(game, GameAction.PlayerLeft, {
             playerGuid
-        });
+        }, [playerGuid]);
     }
 
     public sendMessageToRoom(game: GameLogic, action: GameAction, message?: any, exceptPlayerGuids?: string[]) {

@@ -31,9 +31,9 @@ export class GamePlayer extends Player {
 export abstract class GameLogic {   
     public static gameName = "";
     public static guid: string;
-    public maxPlayers?: number;
+    public static minPlayers?: number;
+    public static maxPlayers?: number;
     public players: GamePlayer[];
-    public minPlayers?: number;
     protected startCardAmountInHand;
     protected hasStack: boolean;
     protected cardsToUse?: Card[];

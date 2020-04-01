@@ -6,7 +6,8 @@ const uuid = require('uuid/v4');
 export class CrazyEights extends GameLogic {
     public static gameName = "Crazy Eights";
     public static guid = "cb805f77-d4ec-4bac-b0f9-000a548a53f3";
-    public minPlayers = 2;
+    public static minPlayers = 2;
+    public static maxPlayers = 4;
     private _currentPlayer: GamePlayer;
     private activeMultipleChoice: GameEffect;
     private activeTakeCard: GameEffect;
@@ -35,7 +36,6 @@ export class CrazyEights extends GameLogic {
     }
 
     protected startCardAmountInHand = 7;
-    public maxPlayers = 4;
 
     public buttonClicked(){
 

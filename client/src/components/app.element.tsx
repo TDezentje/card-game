@@ -35,7 +35,16 @@ export class AppElement extends Component {
                 <div path="/create" class={css.form}>
                     <span class={css.title}>Which game do you want to play?</span>
                     {
-                        this.appState.availableGames?.map(g => <button onClick={() => this.createRoom(g.guid)}>{g.name}</button>)
+                        this.appState.availableGames?.map(g => <button class={css.game} onClick={() => this.createRoom(g.guid)}>
+                            <span>{g.name}</span>
+                            {
+                                g.minPlayersCount && <span>Min: {g.minPlayersCount}</span>
+                            }
+                            {
+                                g.maxPlayersCount && <span>Max: {g.maxPlayersCount}</span>
+                            }
+                            
+                        </button>)
                     }
                 </div>
                 <div path="/join" class={css.form}>
