@@ -332,21 +332,17 @@ export class AppState {
         this.players = data.players.map(p => new Player(p));
         this.currentRoomGuid = data.roomGuid;
         this.status = GameStatus.lobby;
+        this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
     }
 
     private handlePlayerJoined(data) {
-        this.players.push(new Player(data));
-        
-        if (this.isAdmin && this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount) {
-            this.hasMinimumPlayers = true;
-        }
+        this.players.push(new Player(data));        
+        this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
     }
 
     private handlePlayerleft(data) {
         this.players.splice(this.players.findIndex(p => p.guid === data.playerGuid), 1);
-        if (this.isAdmin && this.players.length < this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount) {
-            this.hasMinimumPlayers = false;
-        }
+        this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
     }
 
     private async handleStart(data) {
