@@ -67,6 +67,11 @@ export class GameService {
         player.name = name;
     }
 
+    public changePlayerColor(playerGuid: string, color: string) {
+        const player = this.playerService.getPlayer(playerGuid);
+        player.color = color;
+    }
+
     public createRoom(playerGuid: string, gameGuid: string) {
         let room = this.getRoomByPlayerGuid(playerGuid);
         if (room) {
@@ -183,7 +188,6 @@ export class GameService {
                 player.isAdmin = false;
             }
             this.roomService.addUserToRoom(room.guid, player);
-            this.playerService.updatePlayerColor(player.guid, room.players);
 
             this.websocketService.sendMessageToPlayer(playerGuid, GameAction.Join, {
                 player,

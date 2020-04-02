@@ -6,4 +6,5 @@ export class Turn {
     gameGuid?: string;
     name?: string;
     text?: string;
+    color?: string;
 }

@@ -27,7 +27,8 @@ export enum GameAction {
     RoomRemoved = 'room-removed',
     ButtonClicked = 'button-clicked',
     ChangePlayerName = 'change-player-name',
-    ChatMessage = 'chat-message'
+    ChatMessage = 'chat-message',
+    ChangePlayerColor = 'change-player-color'
 }
 export class WebsocketService {
     private wssGame;
@@ -85,10 +86,13 @@ export class WebsocketService {
                         self.gameService.effectResponse(this.playerGuid, turn.optionGuid);
                         break;
                     case GameAction.ButtonClicked:
-                        self.gameService.buttonClicked(this.playerGuid);                       
-                        break; 
+                        self.gameService.buttonClicked(this.playerGuid);
+                        break;
                     case GameAction.ChangePlayerName:
                         self.gameService.changePlayerName(this.playerGuid, turn.name);
+                        break;
+                    case GameAction.ChangePlayerColor:
+                        self.gameService.changePlayerColor(this.playerGuid, turn.color);
                         break;
                     case GameAction.FocusCard:
                         self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.FocusCard, {
