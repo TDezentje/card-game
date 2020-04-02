@@ -516,6 +516,19 @@ export class AppState {
             name: player.name,
             text: data.text
         });
+
+        window.requestAnimationFrame(() => {
+            debugger;
+            const chat = document.getElementById('chat');
+            const height = chat.clientHeight;
+            const scrollHeight = chat.scrollHeight;
+            const scrollTop = chat.scrollTop;
+            const lastChild = chat.children.item(chat.children.length -1) as HTMLElement;
+
+            if (lastChild.offsetTop < scrollTop + height) {
+                chat.scrollTop = scrollHeight - height;
+            }
+        });  
     }
 
     public handleEffect(data) {

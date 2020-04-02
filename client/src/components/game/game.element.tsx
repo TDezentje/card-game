@@ -112,7 +112,7 @@ export function GameElement({
         {
             me && <div class={`${css.hud} ${gameState.currentPlayerGuid === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
                 <div class={css.chat}>
-                    <div class={css.messages}>
+                    <div class={css.messages} id="chat">
                         {
                             gameState.chatMessages.map(m => <div class={css.message}>
                                 <span class={css.chatName} style={{color: m.color}}>{m.name}:</span>
