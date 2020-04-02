@@ -88,7 +88,7 @@ export class CrazyEights extends GameLogic {
     private resetPile() {
         this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
         this.cardsOnPile = [];
-        this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
+        this.onEffect(this, new GameEffect(GameEffectType.ResetPile, {emptyPile: false}));
     }
 
     public playCard(playerGuid: string, cardGuid: string) {
@@ -120,7 +120,7 @@ export class CrazyEights extends GameLogic {
         if (this.cardsOnPile.length > 5 && this.cardsToUse.length === 0) {
             this.cardsToUse = JSON.parse(JSON.stringify(this.cardsOnPile));
             this.cardsOnPile = [];
-            this.onEffect(this, new GameEffect(GameEffectType.ResetPile));
+            this.onEffect(this, new GameEffect(GameEffectType.ResetPile, {emptyPile: false}));
         }
     }
 

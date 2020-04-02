@@ -52,13 +52,13 @@ export class CardPile {
         card.futureScale = 1;
     }
 
-    public async resetCardsToStack(stack: CardStack) {
-        if (this.cards.length <= 1) {
+    public async resetCardsToStack(stack: CardStack, emptyPile: boolean) {
+        if (!emptyPile && this.cards.length <= 1) {
             return false;
         }
 
         for (const [index, card] of this.cards.entries()) {
-            if (index === this.cards.length -1) {
+            if (!emptyPile && index === this.cards.length -1) {
                 continue;
             }
 

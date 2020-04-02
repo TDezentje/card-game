@@ -554,7 +554,7 @@ export class AppState {
                 this.handleEffectRotationChanged(data.effectData);
                 break;
             case 'reset-pile':
-                this.handleResetPile();
+                this.handleResetPile(data.effectData);
                 break;
             case 'player-skipped':
                 this.handlePlayerSkipped(data.effectData);
@@ -593,8 +593,8 @@ export class AppState {
         }
     }
 
-    private async handleResetPile() {
-        const succeeded = await this.pile.resetCardsToStack(this.stack);
+    private async handleResetPile(data) {
+        const succeeded = await this.pile.resetCardsToStack(this.stack, data.emptyPile);
 
         if (succeeded) {
             await sleep(50);
