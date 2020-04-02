@@ -5,5 +5,6 @@ export class Turn {
     roomGuid?: string;
     gameGuid?: string;
     name?: string;
+    text?: string;
     color?: string;
 }

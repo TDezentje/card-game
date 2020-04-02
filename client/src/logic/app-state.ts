@@ -76,6 +76,12 @@ export class GameEndState {
     altText: string;
 }
 
+export class ChatMessage {
+    name: string;
+    color: string;
+    text: string;
+}
+
 export class AppState {
     public availableGames: Game[];
     public allRooms: Room[];
@@ -101,13 +107,15 @@ export class AppState {
     public activeConstantEffectIndicator: EffectIndicator;
     private lastTick = 0;
 
+    public chatMessages: ChatMessage[];
+
     public constructor() {
         this.tick = this.tick.bind(this);
         this.players = [];
         this.stack = new CardStack();
         this.pile = new CardPile();
         this.table = new Table();
-
+        this.chatMessages = [];
         this.websocket.onmessage = this.onWebsocketMessage.bind(this);
         this.websocket.onerror = this.onWebsocketError.bind(this);
     }
@@ -139,6 +147,7 @@ export class AppState {
     }
 
     public createRoom(guid: any) {
+        this.chatMessages = [];
         this.websocket.send(JSON.stringify({
             action: 'room-create',
             gameGuid: guid
@@ -146,6 +155,7 @@ export class AppState {
     }
 
     public joinRoom(guid: any) {
+        this.chatMessages = [];
         this.currentRoomGuid = guid;
         this.websocket.send(JSON.stringify({
             action: 'join',
@@ -234,6 +244,13 @@ export class AppState {
             color
         }));
     }
+    
+    public sendChatMessage(text: string) {
+        this.websocket.send(JSON.stringify({
+            action: 'chat-message',
+            text
+        }));
+    }
 
     private onWebsocketError(event){
         console.error(event);
@@ -293,6 +310,9 @@ export class AppState {
                 break;
             case 'admin-changed':
                 this.handleAdminChanged(data.actionData);
+                break;
+            case 'chat-message':
+                this.handleChatMessage(data.actionData);
                 break;
         }
     }
@@ -504,6 +524,15 @@ export class AppState {
         if (card) {
             card.unfocus();
         }
+    }
+
+    private handleChatMessage(data) {
+        const player = this.players.find(p => p.guid === data.playerGuid);
+        this.chatMessages.push({
+            color: player.color,
+            name: player.name,
+            text: data.text
+        });
     }
 
     public handleEffect(data) {

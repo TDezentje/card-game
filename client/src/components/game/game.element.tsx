@@ -92,6 +92,13 @@ export function GameElement({
         gameState.takeCard();
     };
 
+    const onKeyPress = (event) => {
+        if (event.keyCode === 13) {
+            gameState.sendChatMessage(event.target.value);
+            event.target.value = '';
+        }
+    };
+
     const me = gameState.players.find(p => p.guid === gameState.me.guid);
 
     return <div class={css.gameContainer}>
@@ -104,7 +111,20 @@ export function GameElement({
 
         {
             me && <div class={`${css.hud} ${gameState.currentPlayerGuid === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
-                <div style={{backgroundColor: me.color }} class={css.name}>{me.name}</div>
+                <div class={css.chat}>
+                    <div class={css.messages}>
+                        {
+                            gameState.chatMessages.map(m => <div class={css.message}>
+                                <span class={css.chatName} style={{color: m.color}}>{m.name}:</span>
+                                <p class={css.text}>{m.text}</p>
+                            </div>)
+                        }
+                    </div>
+                    <div style={{backgroundColor: me.color }} class={css.name}>
+                        {me.name}
+                        <input class={css.input} onKeyPress={onKeyPress} placeholder="Chat" />
+                    </div>
+                </div>
             </div>
         }
         
