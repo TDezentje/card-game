@@ -26,7 +26,8 @@ export enum GameAction {
     RoomUpdated = 'room-updated',
     RoomRemoved = 'room-removed',
     ButtonClicked = 'button-clicked',
-    ChangePlayerName = 'change-player-name'
+    ChangePlayerName = 'change-player-name',
+    ChatMessage = 'chat-message'
 }
 export class WebsocketService {
     private wssGame;
@@ -99,6 +100,12 @@ export class WebsocketService {
                         self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.UnfocusCard, {
                             playerGuid: result.player.guid,
                             cardGuid: turn.cardGuid
+                        });
+                        break;
+                    case GameAction.ChatMessage:
+                        self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.ChatMessage, {
+                            playerGuid: result.player.guid,
+                            text: turn.text
                         });
                         break;
                 }

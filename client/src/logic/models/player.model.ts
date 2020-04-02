@@ -85,16 +85,16 @@ export class Player {
         }
 
         this.isCleaning = false;
-
+        const cardCountMultiplier = 1 - this.cards.length / 25;
         for (const [cardIndex, card] of this.cards.entries()) {
             const distanceFromCenter = cardIndex - (((this.cards.length + 1) / 2) - 1);
             let futureDegrees, futureRotation, futurePositionX, futurePositionY;
     
             if (index === 0) {
-                futureDegrees = htmlDegrees + (4 * distanceFromCenter);
+                futureDegrees = htmlDegrees + ((4 *cardCountMultiplier ) * distanceFromCenter);
                 futureRotation = 0;
-                futurePositionX = (cardPositionX - 70) + (80 * distanceFromCenter);
-                futurePositionY = (cardPositionY - 140) + (Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3);
+                futurePositionX = (cardPositionX - 70) + ((80 * distanceFromCenter) * cardCountMultiplier);
+                futurePositionY = (cardPositionY - 140) + ((Math.abs(distanceFromCenter) * Math.abs(distanceFromCenter) * 3) * cardCountMultiplier);
 
                 if (!myTurn) {
                     futurePositionY += CARD_HEIGHT * .45;

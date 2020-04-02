@@ -80,7 +80,7 @@ export class AppElement extends Component {
     private async handleRoute(event) {
         if (!this.appState?.status && event.current?.props?.roomGuid) {
             while (!this.appState?.me) {
-                await sleep(500);
+                await sleep(1000);
             }
             this.appState.joinRoom(event.current.props.roomGuid);
         }
