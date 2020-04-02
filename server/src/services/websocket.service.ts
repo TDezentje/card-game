@@ -27,7 +27,7 @@ export enum GameAction {
     RoomRemoved = 'room-removed',
     ButtonClicked = 'button-clicked',
     ChangePlayerName = 'change-player-name',
-    ChatMessage = 'chat-message'
+    ChatMessage = 'chat-message',
     ChangePlayerColor = 'change-player-color'
 }
 export class WebsocketService {
