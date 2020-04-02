@@ -68,6 +68,7 @@ export class AppElement extends Component {
                     <span class={css.title}>Settings</span>
                     <label for="name" />
                     <input id="name" name="name" value={this.appState.me?.name} onInput={e => this.onNameChanged(e)} />
+                    <input type="color" id="color" name="color" value={this.appState.me?.color} onInput={e => this.onColorChanged(e)} />
                     <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/game/:roomGuid">
@@ -104,6 +105,10 @@ export class AppElement extends Component {
 
     private onNameChanged(event) {
         this.appState.changeName(event.currentTarget.value);
+    }
+
+    private onColorChanged(event) {
+        this.appState.changeColor(event.currentTarget.value);
     }
 
     private createRoom(guid) {

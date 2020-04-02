@@ -226,6 +226,15 @@ export class AppState {
         }));
     }
 
+    public changeColor(color) {
+        window.localStorage.setItem('color', color);
+        this.me.color = color;
+        this.websocket.send(JSON.stringify({
+            action: 'change-player-color',
+            color
+        }));
+    }
+
     private onWebsocketError(event){
         console.error(event);
     }
@@ -290,9 +299,13 @@ export class AppState {
 
     private handlePlayerCreated(data) {
         const previousName = window.localStorage.getItem('name');
-
         if (previousName) {
             data.player.name = previousName;
+        }
+        
+        const previousColor = window.localStorage.getItem('color');
+        if (previousColor) {
+            data.player.color = previousColor;
         }
 
         this.availableGames = data.games;
@@ -302,6 +315,10 @@ export class AppState {
         
         if (previousName) {
             this.changeName(previousName);
+        }
+
+        if (previousColor) {
+            this.changeColor(previousColor);
         }
     }
 

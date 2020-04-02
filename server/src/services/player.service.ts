@@ -34,10 +34,4 @@ export class PlayerService {
     public getPlayer(playerGuid: string) {
         return this.players.find(p => p.guid === playerGuid);
     }
-
-    public updatePlayerColor(playerGuid: string, playersInRoom: Player[]) {
-        const oldPlayer = this.getPlayer(playerGuid);
-        const unUsedColors = this.colors.filter(c => !playersInRoom.map(p => p.color).includes(c));
-        oldPlayer.color = unUsedColors[Math.floor(Math.random() * Math.floor(unUsedColors.length))];
-    }
 }
