@@ -264,6 +264,8 @@ export class CrazyEights extends GameLogic {
     }
 
     public resetGame() {
+        delete this.activeMultipleChoice;
+        delete this.activeTakeCard;
         this.cardsToUse = JSON.parse(JSON.stringify(CrazyEights.cards));
         this.cardsOnPile = [];
     }

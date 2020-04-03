@@ -20,6 +20,10 @@ export class GameOfHearts extends GameLogic {
         this.onNextPlayer(this, value.guid);
     }
 
+    private totalScore: {
+        [key: string]: number;
+    } = {};
+
     private score: {
         [key: string]: number;
     } = {};
@@ -109,22 +113,34 @@ export class GameOfHearts extends GameLogic {
         const player = this.players.find(p => p.guid === scorePlayerGuid);
         if (player.cards.length === 0) {
             let text = "";
+            let playerWithAllPoints;
+            for (const scorePlayerGuid of Object.keys(this.score)) {
+                if (this.score[scorePlayerGuid] === 15) {
+                    playerWithAllPoints = scorePlayerGuid;
+                    break;
+                }
+            }
             let isWinner = {
                 scorePlayerGuid: "",
                 score: 0
             };
             for (const scorePlayerGuid of Object.keys(this.playedCards)) {
                 const player = this.players.find(p => p.guid === scorePlayerGuid);
-                if (this.score[scorePlayerGuid] >= 50 && isWinner?.score < this.score[scorePlayerGuid]) {
+                if (!this.totalScore[scorePlayerGuid]) {
+                    this.totalScore[scorePlayerGuid] = 0;
+                }
+                
+                this.totalScore[scorePlayerGuid] += playerWithAllPoints ? playerWithAllPoints === scorePlayerGuid ? 0 : 15 : this.score[scorePlayerGuid];
+                if (this.totalScore[scorePlayerGuid] >= 50 && isWinner?.score < this.totalScore[scorePlayerGuid]) {
                     isWinner = { scorePlayerGuid, score: this.score[scorePlayerGuid] };
                 }
-                text += `\n${player.name}: ${this.score[scorePlayerGuid] || 0}`;
+                text += `\n${player.name}: ${this.totalScore[scorePlayerGuid] || 0}`;
             }
 
             if (isWinner.scorePlayerGuid) {
                 const player = this.players.find(p => p.guid === isWinner.scorePlayerGuid);
                 this.onGameover(this, {
-                    text: `CONGRATULATIONS!\n${player.name} won`,
+                    text: `Loser!\n${player.name} lost the game`,
                     buttonText: 'Next game',
                     altText: 'Wait for the gamemaster'
                 });
@@ -173,8 +189,9 @@ export class GameOfHearts extends GameLogic {
 
     public nextGame() {
         this.startGame(this.players);
-        if (Object.values(this.score).some(v => v >= 50)) {
-            this.score = {};
+        this.score = {};
+        if (Object.values(this.totalScore).some(v => v >= 50)) {
+            this.totalScore = {};
         }
     }
 
