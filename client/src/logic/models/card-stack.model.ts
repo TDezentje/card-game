@@ -1,4 +1,4 @@
-import { ScreenSize } from 'logic/interfaces/screen-size.interface';
+import { ScreenSize } from 'logic/models/screen-size.model';
 import { CARD_WIDTH, CARD_HEIGHT, Card } from './card.model';
 
 export class CardStack {

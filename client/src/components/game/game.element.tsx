@@ -1,7 +1,9 @@
 import { h } from 'preact';
-import { AppState, GameStatus, EffectIndicator } from 'logic/app-state';
+import { AppState } from 'logic/app-state';
 import { CardElement } from './card/card.element';
 import { IconElement } from './icon/icon.element';
+import { EffectIndicator } from 'logic/models/effect-indicator.model';
+import { GameStatus } from 'logic/models/game.model';
 
 const css = require('./game.element.scss');
 

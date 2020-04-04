@@ -1,4 +1,4 @@
-import { ScreenSize } from 'logic/interfaces/screen-size.interface';
+import { ScreenSize } from 'logic/models/screen-size.model';
 
 export class Table {
     public size: string;

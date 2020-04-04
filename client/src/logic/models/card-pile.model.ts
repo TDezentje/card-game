@@ -1,7 +1,7 @@
 import { Card, CARD_WIDTH, CARD_HEIGHT } from './card.model';
-import { ScreenSize } from 'logic/interfaces/screen-size.interface';
+import { ScreenSize } from 'logic/models/screen-size.model';
 import { rand, sleep } from 'logic/helpers/animation.helper';
-import { GameStatus } from 'logic/app-state';
+import { GameStatus } from 'logic/models/game.model';
 import { CardStack } from './card-stack.model';
 
 export class CardPile {

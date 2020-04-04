@@ -7,80 +7,12 @@ import { sleep } from './helpers/animation.helper';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { faSyncAlt, faBan, faRedoAlt } from '@fortawesome/free-solid-svg-icons';
 import { route } from 'preact-router';
-
-export enum GameStatus {
-    lobby = 1,
-    started = 2,
-    gameover = 3,
-    cleanup = 4
-}
-
-export enum GameRotation {
-    None = 'none',
-    Clockwise = 'clockwise',
-    counterClockwise = 'counterClockwise',
-}
-
-interface MultipleChoice {
-    options: { 
-        guid: string; 
-        text: string; 
-        color: string; 
-        x?: number; 
-        y?: number; 
-        partX1?: number;
-        partY1?: number;
-        partX2?: number;
-        partY2?: number;
-        offsetX?: number;
-        offsetY?: number;
-    }[];
-    playerGuid: string;
-}
-
-interface Button {
-    text: string;
-    waitForClick: boolean;
-}
-
-export interface EffectIndicator {
-    icon?: IconDefinition;
-    text?: string;
-    visible: boolean;
-    playerPositionDegrees?: number;
-    color?: string;
-    multipleChoice?: MultipleChoice;
-    button?: Button;
-}
-
-export class Room {
-    guid: string;
-    name: string;
-    isStarted: boolean;
-    playersCount: number;
-    minPlayersCount: number;
-    maxPlayersCount: number;
-    gameName: string;
-}
-
-export class Game {
-    guid: string;
-    name: string;
-    minPlayersCount: number;
-    maxPlayersCount: number;
-}
-
-export class GameEndState {
-    text: string;
-    buttonText: string;
-    altText: string;
-}
-
-export class ChatMessage {
-    name: string;
-    color: string;
-    text: string;
-}
+import { ScreenSize } from './models/screen-size.model';
+import { Game, GameStatus, GameRotation, GameEndState } from './models/game.model';
+import { MultipleChoice, Button } from './models/effect-indicator.model';
+import { Room } from './models/room.model';
+import { EffectIndicator } from './models/effect-indicator.model';
+import { ChatMessage } from './models/chat.model';
 
 export class AppState {
     public availableGames: Game[];
@@ -108,6 +40,7 @@ export class AppState {
     private lastTick = 0;
 
     public chatMessages: ChatMessage[];
+    private screenSize: ScreenSize;
 
     public constructor() {
         this.tick = this.tick.bind(this);
@@ -118,20 +51,17 @@ export class AppState {
         this.chatMessages = [];
         this.websocket.onmessage = this.onWebsocketMessage.bind(this);
         this.websocket.onerror = this.onWebsocketError.bind(this);
+
+        this.screenSize = new ScreenSize();
     }
 
     public tick(time: number) {
         const deltaT = time - this.lastTick;
         this.lastTick = time;
 
-        const screenSize = {
-            width: document.body.clientWidth,
-            height: document.body.clientHeight
-        };
-
-        this.table.tick(screenSize);
-        this.stack.tick(screenSize);
-        this.pile.tick(deltaT, screenSize, this.status);
+        this.table.tick(this.screenSize);
+        this.stack.tick(this.screenSize);
+        this.pile.tick(deltaT, this.screenSize, this.status);
 
         const indexOfMe = this.players.findIndex(p => p.guid === this.me.guid);
         for (const [index, player] of this.players.entries()) {
@@ -139,7 +69,7 @@ export class AppState {
             if (relativeIndex < 0) {
                 relativeIndex = this.players.length + relativeIndex;
             }
-            player.tick(deltaT, screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid === this.me.guid);
+            player.tick(deltaT, this.screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid === this.me.guid);
         }
 
         this.afterTick?.();
