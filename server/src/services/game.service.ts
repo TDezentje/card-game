@@ -9,6 +9,7 @@ import { Room } from 'models/room.model';
 import { WebsocketService, GameAction } from './websocket.service';
 import { Card } from 'models/card.model';
 import { GameEndState } from 'models/end-state.model';
+import { GameOfHearts } from 'games/gameOfHearts';
 
 export class GameService {
     private games: { new(): GameLogic }[] = [];
@@ -22,8 +23,9 @@ export class GameService {
     public loadGames() {
         this.games = [];
         this.games.push(Burro);
-        this.games.push(TheMind);
         this.games.push(CrazyEights);
+        this.games.push(GameOfHearts);
+        this.games.push(TheMind);
     }
 
     public getGames() {
