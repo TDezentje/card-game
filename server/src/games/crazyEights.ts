@@ -7,7 +7,6 @@ export class CrazyEights extends GameLogic {
     public static gameName = "Crazy Eights";
     public static guid = "cb805f77-d4ec-4bac-b0f9-000a548a53f3";
     public static minPlayers = 2;
-    public static maxPlayers = 4;
     private _currentPlayer: GamePlayer;
     private activeMultipleChoice: GameEffect;
     private activeTakeCard: GameEffect;
@@ -266,7 +265,10 @@ export class CrazyEights extends GameLogic {
     public resetGame() {
         delete this.activeMultipleChoice;
         delete this.activeTakeCard;
-        this.cardsToUse = JSON.parse(JSON.stringify(CrazyEights.cards));
+        this.cardsToUse = [];
+        for (let i = 0; i < this.players.length / 4; i++) {
+            this.cardsToUse.push(...JSON.parse(JSON.stringify(CrazyEights.cards)));
+        }
         this.cardsOnPile = [];
     }
 
