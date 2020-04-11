@@ -258,7 +258,7 @@ export class AppState extends Watchable {
         }
 
         this.availableGames.setValue(data.games);
-        this.allRooms.setValue(data.rooms);
+        this.allRooms.setValue(data.rooms.map(room => new Room(room)));
         this.me.apply(data.player);
 
         
