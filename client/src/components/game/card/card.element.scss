@@ -28,6 +28,7 @@
     transform-origin: bottom center;
     transition: transform .3s cubic-bezier(0.4, 0.0, 0.2, 1);
     will-change: transform;
+    perspective: 1000px;
 }
 
 .mine.clickable:hover ~ .clickable .scaler {

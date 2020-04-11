@@ -4,7 +4,7 @@ import { Burro } from 'games/burro';
 import { Player } from 'models/player.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
-import { GameLogic, GameEffect } from 'games/game.logic';
+import { GameLogic, GameEffect, GamePlayer } from 'games/game.logic';
 import { Room } from 'models/room.model';
 import { WebsocketService, GameAction } from './websocket.service';
 import { Card } from 'models/card.model';
@@ -223,10 +223,25 @@ export class GameService {
 
     public onGameStarted(game: GameLogic, hasStack: boolean) {
         const room = this.roomService.getRoomByGame(game);
-        this.websocketService.sendMessageToRoom(room, GameAction.Start, {
-            players: room.game.players,
-            hasStack
-        });
+        
+        for (const player of room.game.players) {
+            this.websocketService.sendMessageToPlayer(player.guid, GameAction.Start, {
+                players: room.game.players.map(p => {
+                    if (p.guid === player.guid) {
+                        return p;
+                    }
+
+                    const result = new GamePlayer(p);
+                    result.cards = result.cards.map(c => {
+                        const r = new Card();
+                        r.guid = c.guid;
+                        return r;
+                    });
+                    return result;
+                }),
+                hasStack
+            });
+        }
     }
 
     public onNextPlayer(game: GameLogic, playerGuid: string) {

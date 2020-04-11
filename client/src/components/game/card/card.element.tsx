@@ -30,7 +30,7 @@ export function CardElement({
             onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick}>
 
             <div class={css.scaler}>
-                <div class={`${css.card} ${isMine ? css.clickable : ''}`} style={{transform: `rotate${card.rotationAxis}(${card.rotation}deg)`}}>
+                <div class={`${css.card} ${isMine ? css.clickable : ''}`} style={{transform: `translateZ(0)  rotate${card.rotationAxis}(${card.rotation}deg)`}}>
                     <div class={`${css.front} ${css.face}`}>
                         <span class={css.topLeft} style={{color: card.color}}>{card.corner?.leftTop}</span>
                         <span class={css.topRight} style={{color: card.color}}>{card.corner?.rightTop}</span>
