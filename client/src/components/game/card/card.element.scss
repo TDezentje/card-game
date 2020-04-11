@@ -9,6 +9,7 @@
     cursor: default;
     user-select: none;
     transition: opacity .5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    will-change: transform;
 
     &.mine {
         z-index: 1;
@@ -26,7 +27,9 @@
 .scaler {
     transform-origin: bottom center;
     transition: transform .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    will-change: transform;
 }
+
 .mine.clickable:hover ~ .clickable .scaler {
     transform: translateX(30px);
 }
@@ -39,6 +42,7 @@
 .card {
     transform-style: preserve-3d;
     box-shadow: 0 7px 8px -4px rgba(0,0,0,.2), 0 12px 17px 2px rgba(0,0,0,.14), 0 5px 22px 4px rgba(0,0,0,.12);
+    will-change: transform;
 }
 
 .face,
