@@ -13,17 +13,19 @@ import { MultipleChoice, Button } from './models/effect-indicator.model';
 import { Room } from './models/room.model';
 import { EffectIndicator } from './models/effect-indicator.model';
 import { ChatMessage } from './models/chat.model';
+import { StoreArray } from './helpers/store-array';
+import { Watchable } from './helpers/watchable';
 
-export class AppState {
-    public availableGames: Game[];
-    public allRooms: Room[];
+export class AppState extends Watchable {
+    public availableGames: StoreArray<Game> = new StoreArray();
+    public allRooms: StoreArray<Room> = new StoreArray();
     public me: Player;
 
     public currentRoomGuid: string;
-    public players: Player[];
+    public players: StoreArray<Player> = new StoreArray();
     public currentPlayerGuid: string;
-    public stack: CardStack;
-    public pile: CardPile;
+    public stack: CardStack = new CardStack();;
+    public pile: CardPile = new CardPile();
 
     public hasMinimumPlayers: boolean;
     public isAdmin: boolean;
@@ -31,28 +33,23 @@ export class AppState {
     public rotation: GameRotation = GameRotation.None;
 
     public endState: GameEndState;
-    public table: Table;
+    public table = new Table();
     public websocket = new WebSocket(MODE === 'DEV' ? `ws://${location.hostname}:8080` : `wss://${location.hostname}`);
     public afterTick: () => void;
 
-    public activeEffectIndicator: EffectIndicator;
-    public activeConstantEffectIndicator: EffectIndicator;
+    public activeEffectIndicator = new EffectIndicator();
+    public activeConstantEffectIndicator = new EffectIndicator();
     private lastTick = 0;
 
-    public chatMessages: ChatMessage[];
-    private screenSize: ScreenSize;
+    public chatMessages: StoreArray<ChatMessage> = new StoreArray();
+    private screenSize: ScreenSize = new ScreenSize();
 
     public constructor() {
+        super();
+        
         this.tick = this.tick.bind(this);
-        this.players = [];
-        this.stack = new CardStack();
-        this.pile = new CardPile();
-        this.table = new Table();
-        this.chatMessages = [];
         this.websocket.onmessage = this.onWebsocketMessage.bind(this);
         this.websocket.onerror = this.onWebsocketError.bind(this);
-
-        this.screenSize = new ScreenSize();
     }
 
     public tick(time: number) {
@@ -77,7 +74,7 @@ export class AppState {
     }
 
     public createRoom(guid: any) {
-        this.chatMessages = [];
+        this.chatMessages.empty();
         this.websocket.send(JSON.stringify({
             action: 'room-create',
             gameGuid: guid
@@ -85,7 +82,7 @@ export class AppState {
     }
 
     public joinRoom(guid: any) {
-        this.chatMessages = [];
+        this.chatMessages.empty();
         this.currentRoomGuid = guid;
         this.websocket.send(JSON.stringify({
             action: 'join',
@@ -188,7 +185,6 @@ export class AppState {
     
     private onWebsocketMessage(event) {
         const data = JSON.parse(event.data);
-        console.log(data);
         switch (data.action) {
             case 'player-created':
                 this.handlePlayerCreated(data.actionData);
@@ -244,6 +240,9 @@ export class AppState {
             case 'chat-message':
                 this.handleChatMessage(data.actionData);
                 break;
+            default:
+                console.log(data);
+                break;
         }
     }
 
@@ -258,8 +257,8 @@ export class AppState {
             data.player.color = previousColor;
         }
 
-        this.availableGames = data.games;
-        this.allRooms = data.rooms;
+        this.availableGames.setValue(data.games);
+        this.allRooms.setValue(data.rooms);
         this.me = data.player;
 
         
@@ -273,12 +272,12 @@ export class AppState {
     }
 
     private handleRoomCreated(data) {
-        this.allRooms.push(data.room);
+        this.allRooms.push(new Room(data.room));
     }
 
     private handleRoomUpdated(data) {
-        const index = this.allRooms.findIndex(r => r.guid === data.room.guid);
-        this.allRooms[index] = data.room;
+        const room = this.allRooms.find(r => r.guid === data.room.guid);
+        room.apply(data.room);
     }
 
     private handleRoomRemoved(data) {
@@ -287,29 +286,32 @@ export class AppState {
             this.currentRoomGuid = '';
         }
 
-        const index = this.allRooms.findIndex(r => r.guid === data.roomGuid);
-        if(index > -1) {
-            this.allRooms.splice(index, 1);
-        }
+        this.allRooms.removeAt(this.allRooms.findIndex(r => r.guid === data.roomGuid));
     }
 
     private handleJoin(data) {
         route(`/game/${data.roomGuid}`);
         this.isAdmin = data.player.isAdmin;
-        this.players = data.players.map(p => new Player(p));
+        this.players.setValue(data.players.map(p => new Player(p)));
         this.currentRoomGuid = data.roomGuid;
         this.status = GameStatus.lobby;
         this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
+
+        this.update();
     }
 
     private handlePlayerJoined(data) {
         this.players.push(new Player(data));        
         this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
+                
+        this.update();
     }
 
     private handlePlayerleft(data) {
-        this.players.splice(this.players.findIndex(p => p.guid === data.playerGuid), 1);
-        this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
+        this.players.removeAt(this.players.findIndex(p => p.guid === data.playerGuid));
+        this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid)?.minPlayersCount;
+                
+        this.update();
     }
 
     private async handleStart(data) {
@@ -319,23 +321,23 @@ export class AppState {
         }
 
         this.status = GameStatus.started;
-        this.pile.cards = [];
+        this.pile.cards.empty();
         this.stack.hasCards = true;
         this.endState = null;
 
         if (this.activeConstantEffectIndicator) {
-            this.activeConstantEffectIndicator.visible = false;
+            this.activeConstantEffectIndicator.hide();
         }
         
         if (this.activeEffectIndicator) {
-            this.activeEffectIndicator.visible = false;
+            this.activeEffectIndicator.hide();
         }
 
-        this.players = data.players.map(p => {
+        this.players.setValue(data.players.map(p => {
             p = JSON.parse(JSON.stringify(p));
             delete p.cards;
             return new Player(p);
-        });
+        }));
 
         for (let i = 0; i < Math.max(...data.players.map(p => p.cards.length)); i++) {
             for (const p of data.players) {
@@ -347,29 +349,30 @@ export class AppState {
                 }
 
                 this.addCardToPlayerFromStack(p.guid, card);
-
             };
         }
+
         this.stack.hasCards = data.hasStack;
+        this.update();
     }
 
     private addCardToPlayerFromStack(playerGuid: string, card: any) {
         card = new Card(card);
-
-        card.positionX = this.stack.card.positionX;
-        card.positionY = this.stack.card.positionY;
-        card.originX = this.stack.card.originX;
-        card.originY = this.stack.card.originY;
-        card.rotation = this.stack.card.rotation;
-        card.rotationAxis = 'Y';
-        card.degrees = this.stack.card.degrees;
-        card.adjustmentX = this.stack.card.adjustmentX;
-        card.adjustmentY = this.stack.card.adjustmentY;
-        card.scale = this.stack.card.scale;
-        card.futureScale = card.scale;
-
-        card.futureAdjustmentX = 0;
-        card.futureAdjustmentY = 0;
+        card.apply({
+            positionX: this.stack.card.positionX,
+            positionY: this.stack.card.positionY,
+            originX: this.stack.card.originX,
+            originY: this.stack.card.originY,
+            rotation: this.stack.card.rotation,
+            rotationAxis: 'Y',
+            degrees: this.stack.card.degrees,
+            adjustmentX: this.stack.card.adjustmentX,
+            adjustmentY: this.stack.card.adjustmentY,
+            scale: this.stack.card.scale,
+            futureScale: card.scale,
+            futureAdjustmentX: 0,
+            futureAdjustmentY: 0
+        });
 
         const player = this.players.find(p => playerGuid === p.guid);
         player.cards.push(card);
@@ -377,40 +380,52 @@ export class AppState {
 
     private handlePlay(data) {
         if (this.activeConstantEffectIndicator && !this.activeConstantEffectIndicator.button?.waitForClick) {
-            this.activeConstantEffectIndicator.visible = false;
+            this.activeConstantEffectIndicator.hide();
         }
 
         const player = this.players.find(p => p.guid === data.playerGuid);
         const cardIndex = player.cards.findIndex(c => c.guid === data.card.guid);
 
-        const card = player.cards[cardIndex];
-        card.corner = data.card.corner;
-        card.display = data.card.display;
-        card.color = data.card.color;
-        player.cards.splice(cardIndex, 1);
+        const card = player.cards.item(cardIndex);
+        card.apply({
+            corner: data.card.corner,
+            display: data.card.display,
+            color: data.card.color
+        });
+
+        player.cards.removeAt(cardIndex);
         this.pile.addCard(card);
     }
 
     private handleMoveCard(data) {
         if (this.activeConstantEffectIndicator && !this.activeConstantEffectIndicator.button?.waitForClick) {
-            this.activeConstantEffectIndicator.visible = false;
+            this.activeConstantEffectIndicator.hide();
         }
 
         const player = this.players.find(p => p.guid === data.playerGuid);
         const cardIndex = player.cards.findIndex(c => c.guid === data.card.guid);
         const receivingPlayer = this.players.find(p => p.guid === data.toPlayerGuid);
 
-        const card = player.cards[cardIndex];
-        card.corner = data.card.corner;
-        card.display = data.card.display;
-        card.color = data.card.color;
+        const card = player.cards.item(cardIndex);
+        card.apply({
+            corner: data.card.corner,
+            display: data.card.display,
+            color: data.card.color
+        });
 
-        player.cards.splice(cardIndex, 1);
+        player.cards.removeAt(cardIndex);
         receivingPlayer.cards.push(card);
     }
 
     private handleNextPlayer(data) {
+        const activePlayer = this.players.find(p => p.guid === this.currentPlayerGuid);
+        const newPlayer = this.players.find(p => p.guid === data.playerGuid);
         this.currentPlayerGuid = data.playerGuid;
+
+        if(activePlayer){
+            activePlayer.isActive = false;
+        }
+        newPlayer.isActive = true;
     }
 
     public async handleTakeCards(data) {
@@ -426,12 +441,14 @@ export class AppState {
             this.status = GameStatus.gameover;
             this.rotation = GameRotation.None;
             this.endState = data;
+            this.update();
         }, 600);
     }
 
     private handleAdminChanged(data) {
         this.players.find(p => p.guid === data.playerGuid).isAdmin = true;
         this.isAdmin = data.playerGuid === this.me.guid;
+        this.update();
     }
 
     public handleFocusCard(data) {
@@ -465,7 +482,6 @@ export class AppState {
         });
 
         window.requestAnimationFrame(() => {
-            debugger;
             const chat = document.getElementById('chat');
             const height = chat.clientHeight;
             const scrollHeight = chat.scrollHeight;
@@ -521,6 +537,8 @@ export class AppState {
         } else {
             this.rotation = GameRotation.None;
         }
+
+        this.update();
     }
 
     private async handleResetPile(data) {
@@ -621,7 +639,7 @@ export class AppState {
         }
         
         if ((isConstant || multipleChoice || button) && this.activeConstantEffectIndicator?.visible) {
-            this.activeConstantEffectIndicator.visible = false;
+            this.activeConstantEffectIndicator.hide();
             await sleep(400);
         }
 
@@ -643,15 +661,15 @@ export class AppState {
         };
 
         if (isConstant || multipleChoice || button) {
-            this.activeConstantEffectIndicator = effect;
+            this.activeConstantEffectIndicator.apply(effect);
         } else {
-            this.activeEffectIndicator = effect;
+            this.activeEffectIndicator.apply(effect);
         }
 
 
         if (!isConstant && !multipleChoice && !button) {
             setTimeout(async () => {
-                this.activeEffectIndicator.visible = false;
+                this.activeEffectIndicator.hide();
             }, 1400);
         }
 

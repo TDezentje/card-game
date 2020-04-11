@@ -1,4 +1,6 @@
-export class Room {
+import { Watchable } from 'logic/helpers/watchable';
+
+export class Room extends Watchable {
     guid: string;
     name: string;
     isStarted: boolean;
@@ -6,4 +8,12 @@ export class Room {
     minPlayersCount: number;
     maxPlayersCount: number;
     gameName: string;
+
+    public constructor(obj?: Room) {
+        super();
+        
+        if (obj) {
+            this.apply(obj);
+        }
+    }
 }

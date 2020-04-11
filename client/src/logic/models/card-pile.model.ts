@@ -3,20 +3,18 @@ import { ScreenSize } from 'logic/models/screen-size.model';
 import { rand, sleep } from 'logic/helpers/animation.helper';
 import { GameStatus } from 'logic/models/game.model';
 import { CardStack } from './card-stack.model';
+import { Watchable } from 'logic/helpers/watchable';
+import { StoreArray } from 'logic/helpers/store-array';
 
-export class CardPile {
-    public cards: Card[];
-
-    public constructor() {
-        this.cards = [];
-    }
+export class CardPile extends Watchable {
+    public cards: StoreArray<Card> = new StoreArray();
 
     public tick(deltaT, screenSize: ScreenSize, status: GameStatus) {
         const centerX = screenSize.width / 2;
         const centerY = screenSize.height / 2;
 
         for (let i = 0; i < this.cards.length; i++) {
-            const card = this.cards[i];
+            const card = this.cards.item(i);
             if (status === GameStatus.cleanup && !card.isCleaning) {
                 card.futurePositionX = card.positionX + (rand(20) * 10);
                 card.futurePositionY = card.positionY + (rand(20) * 10);
@@ -50,6 +48,7 @@ export class CardPile {
         card.futureAdjustmentY = rand(30);
         card.futureDegrees = card.degrees + rand(55);
         card.futureScale = 1;
+        this.update();
     }
 
     public async resetCardsToStack(stack: CardStack, emptyPile: boolean) {

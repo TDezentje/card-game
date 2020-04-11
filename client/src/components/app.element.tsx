@@ -3,6 +3,7 @@ import { GameElement } from './game/game.element';
 import { AppState } from 'logic/app-state';
 import { Router, route } from 'preact-router';
 import { sleep } from 'logic/helpers/animation.helper';
+import { Watch } from './helper/watch';
 
 const css = require('./app.element.scss');
 
@@ -17,9 +18,6 @@ export class AppElement extends Component {
     }
 
     public componentDidMount() {     
-        this.appState.afterTick = () => {
-            this.forceUpdate();
-        };
         window.requestAnimationFrame(this.appState.tick);  
     }
 
@@ -34,34 +32,39 @@ export class AppElement extends Component {
                 </div>
                 <div path="/create" class={css.form}>
                     <span class={css.title}>Which game do you want to play?</span>
-                    {
-                        this.appState.availableGames?.map(g => <button class={css.game} onClick={() => this.createRoom(g.guid)}>
-                            <span>{g.name}</span>
-                            {
-                                g.minPlayersCount && <span>Min: {g.minPlayersCount}</span>
-                            }
-                            {
-                                g.maxPlayersCount && <span>Max: {g.maxPlayersCount}</span>
-                            }
-                            
-                        </button>)
-                    }
-
+                        <Watch property={this.appState.availableGames} render={
+                            (availableGames) => availableGames.value.map(g => <button class={css.game} onClick={() => this.createRoom(g.guid)}>
+                                <span>{g.name}</span>
+                                {
+                                    g.minPlayersCount && <span>Min: {g.minPlayersCount}</span>
+                                }
+                                {
+                                    g.maxPlayersCount && <span>Max: {g.maxPlayersCount}</span>
+                                }
+                            </button>)
+                        } />
                     <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/join" class={css.form}>
                     <span class={css.title}>Choose a room</span>
-                    {
-                        this.appState.allRooms?.filter(r => !r.isStarted).length === 0 ? <span class={css.sub}>No rooms found</span> : null
-                    }
-                    {
-                        this.appState.allRooms?.filter(r => !r.isStarted).map(r => <button class={css.room} disabled={(r.maxPlayersCount && r.playersCount === r.maxPlayersCount)} 
-                                onClick={() => this.joinRoom(r.guid)}>
-                            <span>{r.name}</span>
-                            {r.maxPlayersCount ? <span>{r.playersCount}/{r.maxPlayersCount}</span> : null}
-                        </button>)
-
-                    }
+                    <Watch property={this.appState.allRooms} render={
+                            (allRooms) => {
+                                const rooms = allRooms.value.filter(r => !r.isStarted);
+                                if (rooms.length === 0) {
+                                    return <span class={css.sub}>No rooms found</span>;
+                                } else {
+                                    return rooms.map(room => 
+                                        <Watch property={room} render={(r) => 
+                                            <button class={css.room} disabled={(r.maxPlayersCount && r.playersCount === r.maxPlayersCount)} 
+                                                onClick={() => this.joinRoom(r.guid)}>
+                                                <span>{r.name}</span>
+                                                {r.maxPlayersCount ? <span>{r.playersCount}/{r.maxPlayersCount}</span> : null}
+                                            </button>
+                                        } /> 
+                                    );
+                                }
+                            }
+                    } />
                     <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/settings" class={css.form}>

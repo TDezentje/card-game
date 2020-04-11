@@ -4,10 +4,11 @@ import { CardElement } from './card/card.element';
 import { IconElement } from './icon/icon.element';
 import { EffectIndicator } from 'logic/models/effect-indicator.model';
 import { GameStatus } from 'logic/models/game.model';
+import { Watch } from 'components/helper/watch';
 
 const css = require('./game.element.scss');
 
-const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
+const EffectIndicatorElement = ({ gameState, indicator, isConstant}: {
     gameState: AppState;
     indicator: EffectIndicator;
     isConstant?: boolean;
@@ -20,48 +21,50 @@ const EffectIndicatorElement =  ({ gameState, indicator, isConstant}: {
         gameState.buttonClicked();
     };
 
-    return <div class={`${css.effectIndicatorContainer} ${indicator?.multipleChoice ? css.multipleChoice : ''} ${indicator?.button ? css.button : ''}`} style={{width: gameState.table.size, height: gameState.table.size}}>
-        <div class={`${css.effectIndicator} ${indicator?.visible ? css.visible : ''} ${isConstant && !indicator?.multipleChoice ? css.constant : ''}`}>
-            <IconElement icon={indicator?.icon} />
-            <span class={indicator?.color ? css.background : ''} style={{color: indicator?.color}}>{indicator?.text}</span>
+    return <Watch property={indicator} render={() => 
+        <div class={`${css.effectIndicatorContainer} ${indicator.multipleChoice ? css.multipleChoice : ''} ${indicator.button ? css.button : ''}`} style={{width: gameState.table.size, height: gameState.table.size}}>
+            <div class={`${css.effectIndicator} ${indicator.visible ? css.visible : ''} ${isConstant && !indicator.multipleChoice ? css.constant : ''}`}>
+                <IconElement icon={indicator.icon} />
+                <span class={indicator.color ? css.background : ''} style={{color: indicator.color}}>{indicator.text}</span>
 
-            {
-                indicator?.playerPositionDegrees !== undefined ? 
-                    <div class={css.arrowContainer} style={{transform: `translate(-50%, -50%) rotate(${indicator.playerPositionDegrees}deg)`}}>
-                        <div class={css.arrow} />
+                {
+                    indicator.playerPositionDegrees !== undefined ? 
+                        <div class={css.arrowContainer} style={{transform: `translate(-50%, -50%) rotate(${indicator.playerPositionDegrees}deg)`}}>
+                            <div class={css.arrow} />
+                        </div> : null
+                }
+                
+                {
+                    indicator.multipleChoice ? <div class={css.multipleChoiceBackground}>
+                        {
+                            <svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
+                                {
+                                    indicator.multipleChoice?.options.map(o => [
+                                        <path d={`M${o.offsetX},${o.offsetY} L${o.partX1 + o.offsetX},${o.partY1 + o.offsetY} A100,100 0 0,1 ${o.partX2 + o.offsetX},${o.partY2 + o.offsetY} Z`} fill="white"
+                                            onClick={() => onOptionClick(o.guid)} />
+                                    ])
+                                }
+                            </svg>
+                        }
                     </div> : null
-            }
-            
-            {
-                indicator?.multipleChoice ? <div class={css.multipleChoiceBackground}>
-                    {
-                        <svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
-                            {
-                                indicator?.multipleChoice?.options.map(o => [
-                                    <path d={`M${o.offsetX},${o.offsetY} L${o.partX1 + o.offsetX},${o.partY1 + o.offsetY} A100,100 0 0,1 ${o.partX2 + o.offsetX},${o.partY2 + o.offsetY} Z`} fill="white"
-                                        onClick={() => onOptionClick(o.guid)} />
-                                ])
-                            }
-                        </svg>
-                    }
-                </div> : null
-            }
-            {
-                indicator?.multipleChoice?.options.map(o => 
-                    <button onClick={() => onOptionClick(o.guid)} disabled ={indicator.multipleChoice.playerGuid !== gameState.me.guid} 
-                            style={{color: o.color, transform: `translate(-50%, -50%) translate(${o.x}px, ${o.y}px)`}}><span>{o.text}</span></button>)
-            }
+                }
+                {
+                    indicator.multipleChoice?.options.map(o => 
+                        <button onClick={() => onOptionClick(o.guid)} disabled ={indicator.multipleChoice.playerGuid !== gameState.me.guid} 
+                                style={{color: o.color, transform: `translate(-50%, -50%) translate(${o.x}px, ${o.y}px)`}}><span>{o.text}</span></button>)
+                }
 
-            {
-                indicator?.button ? 
-                    <button class={css.background} onClick={onButtonClick}>
-                        <span>{indicator.button.text}</span>
-                    </button>
-                    :null
-            }
-            
+                {
+                    indicator.button ? 
+                        <button class={css.background} onClick={onButtonClick}>
+                            <span>{indicator.button.text}</span>
+                        </button>
+                        :null
+                }
+                
+            </div>
         </div>
-    </div>;
+    } />;
 };
 
 export function GameElement({
@@ -104,23 +107,27 @@ export function GameElement({
     const me = gameState.players.find(p => p.guid === gameState.me.guid);
 
     return <div class={css.gameContainer}>
-        <div class={css.table} style={{width: gameState.table.size, height: gameState.table.size}}>
-            <div class={`${css.rotationIndicator} ${css[gameState.rotation]}`}> 
-                <div class={css.arrow} />
-                <div class={css.arrow} />
-            </div>
-        </div>
+        <Watch property={gameState} render={gameState =>
+            <Watch property={gameState.table} render={table =>
+                <div class={css.table} style={{width: table.size, height: table.size}}>
+                    <div class={`${css.rotationIndicator} ${css[gameState.rotation]}`}> 
+                        <div class={css.arrow} />
+                        <div class={css.arrow} />
+                    </div>
+                </div>
+            } />
+        } />
 
         {
             me && <div class={`${css.hud} ${gameState.currentPlayerGuid === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
                 <div class={css.chat}>
                     <div class={css.messages} id="chat">
-                        {
-                            gameState.chatMessages.map(m => <div class={css.message}>
+                        <Watch property={gameState.chatMessages} render={chatMessages => 
+                            chatMessages.map(m => <div class={css.message}>
                                 <span class={css.chatName} style={{color: m.color}}>{m.name}:</span>
                                 <p class={css.text}>{m.text}</p>
-                            </div>)
-                        }
+                            </div>) as h.JSX.Element[]
+                        } />
                     </div>
                     <div style={{backgroundColor: me.color }} class={css.name}>
                         {me.name}
@@ -130,37 +137,45 @@ export function GameElement({
             </div>
         }
         
-        {
-            gameState.pile.cards.map(c => <CardElement gameState={gameState} card={c} />)
-        }   
+        <Watch property={gameState.pile} render={pile => 
+            <Watch property={pile.cards} render={cards =>
+                cards.map(c => <CardElement key={c.guid} gameState={gameState} card={c} />) as h.JSX.Element[]
+            } />
+        } />
 
-        {
-            gameState.stack.hasCards ? <CardElement onClick={onStackClick} gameState={gameState} card={gameState.stack.card} /> : <div class={css.emptyStack}><span>X</span></div>
-        }   
+        <Watch property={gameState.stack} render={stack => 
+            stack.hasCards ?
+                <CardElement key={'stack'} onClick={onStackClick} gameState={gameState} card={gameState.stack.card} /> 
+                : <div class={css.emptyStack}><span>X</span></div>
+        } />
 
-        {
-            gameState.players.map(p => 
-                p.cards?.map(c => {
+        <Watch key="playerCards" property={gameState.players} render={players => 
+            players.map(p => <Watch key={`cards_${p.guid}`} property={p.cards} render={cards =>
+                cards.map(c => {
                     const isMine = p.guid === gameState.me.guid;
-                    return <CardElement gameState={gameState} isMine={isMine} card={c}
+                    return <CardElement key={c.guid} gameState={gameState} isMine={isMine} card={c}
                             onClick={isMine ? () => onMyCardClick(c) : null} 
                             onMouseEnter={isMine ? () => onMyCardMouseEnter(c) : null} 
                             onMouseLeave={isMine ? () => onMyCardMouseLeave(c) : null} />;
                 })
-            )
-        }
+            } />) as h.JSX.Element[]
+        } />
 
-        {
-            gameState.players.filter(p => p.guid !== gameState.me.guid).map(p => <div class={`${css.nameTag} ${gameState.currentPlayerGuid === p.guid ? css.active : ''}`} style={{transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
-                <div class={css.indicator} />
-                <div class={css.background} style={{background: p.color }} />
-                <span>{p.name}</span>
-            </div>)
-        }
 
-        {
+        <Watch key="players" property={gameState.players} render={players => players
+            .filter(p => p.guid !== gameState.me.guid)
+            .map(player => <Watch key={player.guid} property={player} render={(p) =>
+                <div class={`${css.nameTag} ${p.isActive ? css.active : ''}`} style={{transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
+                    <div class={css.indicator} />
+                    <div class={css.background} style={{background: p.color }} />
+                    <span>{p.name}</span>
+                </div>
+            } />)
+        } />
+
+        <Watch property={gameState} render={ gameState => 
             gameState.status === GameStatus.lobby && gameState.isAdmin && gameState.hasMinimumPlayers ? <button onClick={onStartClick} class={css.startButton}>START</button> : null
-        }
+        } />
 
         <EffectIndicatorElement key="constant" gameState={gameState} indicator={gameState.activeConstantEffectIndicator} isConstant />
         <EffectIndicatorElement key="instant" gameState={gameState} indicator={gameState.activeEffectIndicator} />

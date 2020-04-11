@@ -1,4 +1,5 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { Watchable } from 'logic/helpers/watchable';
 
 export interface MultipleChoice {
     options: { 
@@ -22,7 +23,7 @@ export interface Button {
     waitForClick: boolean;
 }
 
-export interface EffectIndicator {
+export class EffectIndicator extends Watchable {
     icon?: IconDefinition;
     text?: string;
     visible: boolean;
@@ -30,4 +31,9 @@ export interface EffectIndicator {
     color?: string;
     multipleChoice?: MultipleChoice;
     button?: Button;
+
+    public hide() {
+        this.visible = false;
+        this.update();
+    }
 }
