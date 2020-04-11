@@ -180,9 +180,13 @@ export function GameElement({
         <EffectIndicatorElement key="constant" gameState={gameState} indicator={gameState.activeConstantEffectIndicator} isConstant />
         <EffectIndicatorElement key="instant" gameState={gameState} indicator={gameState.activeEffectIndicator} />
 
-        <div key="gameover" class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
-            {gameState.endState?.text.split('\n').map(s => <span class={css.title}>{s}</span>)}
-            {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>{gameState.endState?.buttonText}</a> : <span class={css.sub}>{gameState.endState?.altText}</span> }
-        </div>
+        <Watch property={gameState} render={ gameState => 
+            <div key="gameover" class={`${css.overlay} ${gameState.status === GameStatus.gameover ? css.visible : ''}`}>
+                {gameState.endState?.text.split('\n').map(s => <span class={css.title}>{s}</span>)}
+                {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>{gameState.endState?.buttonText}</a> : <span class={css.sub}>{gameState.endState?.altText}</span> }
+            </div>
+        } />
+
+
     </div>;
 }
