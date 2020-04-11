@@ -2,12 +2,17 @@ import { h, Component } from 'preact';
 import { GameElement } from './game/game.element';
 import { AppState } from 'logic/app-state';
 import { Router, route } from 'preact-router';
-import { sleep } from 'logic/helpers/animation.helper';
+import { sleep, getQuality, setQuality, Quality } from 'logic/helpers/animation.helper';
 import { Watch } from './helper/watch';
 
 const css = require('./app.element.scss');
 
-export class AppElement extends Component {
+class State {
+    public quality;
+}
+
+export class AppElement extends Component<{}, State> {
+    public state = new State();
     public appState = new AppState();
     
     public constructor(props) {
@@ -15,14 +20,17 @@ export class AppElement extends Component {
         this.onCreateRoomClick = this.onCreateRoomClick.bind(this);
         this.onJoinRoomClick = this.onJoinRoomClick.bind(this);
         this.handleRoute = this.handleRoute.bind(this);
+        this.onQualityChanged = this.onQualityChanged.bind(this);
+
+        this.state.quality = getQuality();
     }
 
     public componentDidMount() {     
-        window.requestAnimationFrame(this.appState.tick);  
+        window.requestAnimationFrame(this.appState.tick);
     }
 
     public render() {
-        return <div>
+        return <div class={`quality-${this.state.quality}`}>
             <Router onChange={this.handleRoute}>
                 <div path="/" class={css.form}>
                     <span class={css.title}>Welcome</span>
@@ -68,12 +76,23 @@ export class AppElement extends Component {
                     <button class={css.back} onClick={this.onBackClick}>Back</button>
                 </div>
                 <div path="/settings" class={css.form}>
-                    <span class={css.title}>Settings</span>
-                    <label for="name" />
-                    <input id="name" name="name" value={this.appState.me?.name} onInput={e => this.onNameChanged(e)} />
-                    <input type="color" id="color" name="color" value={this.appState.me?.color} onInput={e => this.onColorChanged(e)} />
-                    <button class={css.back} onClick={this.onBackClick}>Back</button>
+                    <Watch property={this.appState.me} render={ me =>
+                        [
+                            <span class={css.title}>Settings</span>,
+                            <label for="name" />,
+
+                            <input id="name" name="name" value={me.name} onInput={e => this.onNameChanged(e)} />,
+                            <input type="color" id="color" name="color" value={me.color} onInput={e => this.onColorChanged(e)} />,
+
+                            <select id="quality" name="quality" onInput={e => this.onQualityChanged(e)}>
+                                <option selected={this.state.quality === Quality.Low} value="low">Low</option>
+                                <option selected={this.state.quality === Quality.High} value="high">High</option>
+                            </select>,
+                            <button class={css.back} onClick={this.onBackClick}>Back</button>
+                        ]
+                    } />
                 </div>
+                
                 <div path="/game/:roomGuid">
                     <GameElement gameState={this.appState} />
                 </div>
@@ -112,6 +131,13 @@ export class AppElement extends Component {
 
     private onColorChanged(event) {
         this.appState.changeColor(event.currentTarget.value);
+    }
+
+    private onQualityChanged(event) {
+        this.setState({
+            quality: event.currentTarget.value
+        });
+        setQuality(event.currentTarget.value);
     }
 
     private createRoom(guid) {

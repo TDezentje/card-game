@@ -19,3 +19,19 @@ export function rand(arroundZero, max?) {
 
     return (arroundZero - (Math.random() * (arroundZero * 2)));
 }
+
+let quality = localStorage.getItem('quality') || 'high';
+
+export function getQuality() {
+    return quality;
+}
+
+export function setQuality(val) {
+    quality = val;
+    localStorage.setItem('quality', val);
+}
+
+export enum Quality {
+    Low = 'low',
+    High = 'high'
+}

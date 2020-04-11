@@ -26,8 +26,6 @@
 
         &.clockwise {
             opacity: 1;    
-            animation: rotate-clockwise 10s linear;
-            animation-iteration-count: infinite;
 
             &:before {
                 border-top-color: transparent;
@@ -41,12 +39,19 @@
                     transform: translate(-2.5px, 20px);
                 }
             }
+
+            :global .quality-high :local & {
+                animation: rotate-clockwise 10s linear;
+                animation-iteration-count: infinite;    
+            }
+
+            :global .quality-low :local & {
+                transform: translateZ(0);
+            }
         }
         
         &.counterClockwise {
             opacity: 1;    
-            animation: rotate-counter-clockwise 10s linear;
-            animation-iteration-count: infinite;
 
             &:before {
                 border-top-color: transparent;
@@ -60,6 +65,15 @@
                 &:last-child {
                     transform: rotate(180deg) translate(2.5px, 20px);
                 }
+            }
+
+            :global .quality-high :local & {
+                animation: rotate-counter-clockwise 10s linear;
+                animation-iteration-count: infinite;  
+            }
+
+            :global .quality-low :local & {
+                transform: translateZ(0);
             }
         }
 
@@ -153,9 +167,17 @@
             height: 100%;
             border-radius: 50%;
             z-index: 0;
-            animation: pulse 1.3s ease-out;
-            animation-iteration-count: infinite;
             transform-origin: center;
+
+            :global .quality-high :local & {
+                animation: pulse 1.3s ease-out;
+                animation-iteration-count: infinite;
+            }
+
+            :global .quality-low :local & {
+                transform: scale(1.2);
+                background: rgba(255, 0, 0, .4);
+            }
         }
     }
 }
@@ -209,9 +231,6 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, .5);
-    backdrop-filter: blur(8px);
-    transition: opacity .3s cubic-bezier(0.4, 0.0, 0.2, 1);
     z-index: 100;
     opacity: 0;
     pointer-events: none;
@@ -244,6 +263,16 @@
     .sub {
         color: #fff;
         font-size: 1.5rem;
+    }
+
+    :global .quality-high :local & {
+        backdrop-filter: blur(8px);
+        transition: opacity .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        background: rgba(0, 0, 0, .5);
+    }
+
+    :global .quality-low :local & {
+        background: rgba(0, 0, 0, .75);
     }
 }
 
@@ -429,9 +458,6 @@
     border-radius: 50%;
     font-size: 13rem;
     opacity: 0;
-    background: radial-gradient(rgba(0, 0, 0, .26) 0%, rgba(0, 0, 0, .26) 30%, transparent 90%, transparent 100%);
-    transition: opacity .4s cubic-bezier(0.4, 0.0, 0.2, 1), transform .4s cubic-bezier(0.4, 0.0, 0.2, 1);
-    backdrop-filter: blur(5px);
     will-change: transform;
 
     .background {
@@ -469,11 +495,18 @@
             path {
                 cursor: pointer;
                 transition: transform .2s cubic-bezier(0.4, 0.0, 0.2, 1);
-                opacity: .8;
 
                 &:hover {
                     transform: scale(1.05);
                     opacity: .95;
+                }
+
+                :global .quality-high :local & {
+                    opacity: .8;
+                }
+
+                :global .quality-low :local & {
+                    opacity: 1;
                 }
             }
         }
@@ -494,12 +527,26 @@
     .arrow {
         border: 30px solid transparent;
         border-left-color: white;
-        animation: bounce .8s ease-in-out;
-        animation-iteration-count: infinite;
+
+
+        :global .quality-high :local & {
+            animation: bounce .8s ease-in-out;
+            animation-iteration-count: infinite;
+        }
     }
 
     .arrow {
         opacity: .9;
+    }
+
+    :global .quality-high :local & {
+        background: radial-gradient(rgba(0, 0, 0, .26) 0%, rgba(0, 0, 0, .26) 30%, transparent 90%, transparent 100%);
+        transition: opacity .4s cubic-bezier(0.4, 0.0, 0.2, 1), transform .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        backdrop-filter: blur(5px);
+    }
+
+    :global .quality-low :local & {
+        background: rgba(0, 0, 0, .4);
     }
 }
 

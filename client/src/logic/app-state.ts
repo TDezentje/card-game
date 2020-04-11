@@ -19,7 +19,7 @@ import { Watchable } from './helpers/watchable';
 export class AppState extends Watchable {
     public availableGames: StoreArray<Game> = new StoreArray();
     public allRooms: StoreArray<Room> = new StoreArray();
-    public me: Player;
+    public me: Player = new Player({});
 
     public currentRoomGuid: string;
     public players: StoreArray<Player> = new StoreArray();
@@ -259,7 +259,7 @@ export class AppState extends Watchable {
 
         this.availableGames.setValue(data.games);
         this.allRooms.setValue(data.rooms);
-        this.me = data.player;
+        this.me.apply(data.player);
 
         
         if (previousName) {
@@ -369,7 +369,7 @@ export class AppState extends Watchable {
             adjustmentX: this.stack.card.adjustmentX,
             adjustmentY: this.stack.card.adjustmentY,
             scale: this.stack.card.scale,
-            futureScale: card.scale,
+            futureScale: this.stack.card.scale,
             futureAdjustmentX: 0,
             futureAdjustmentY: 0
         });

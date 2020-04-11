@@ -1,4 +1,4 @@
-import { getTweenValue } from 'logic/helpers/animation.helper';
+import { getTweenValue, Quality, getQuality } from 'logic/helpers/animation.helper';
 import { Watchable } from 'logic/helpers/watchable';
 
 export class Card extends Watchable {
@@ -64,7 +64,11 @@ export class Card extends Watchable {
     }
 
     public focus() {
-        this.futureScale = 1.15;
+        if (getQuality() === Quality.High) {
+            this.futureScale = 1.15;
+        } else {
+            this.futureScale = 1;
+        }
     }
 
     public unfocus() {
