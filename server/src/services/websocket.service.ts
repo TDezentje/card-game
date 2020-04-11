@@ -28,7 +28,8 @@ export enum GameAction {
     ButtonClicked = 'button-clicked',
     ChangePlayerName = 'change-player-name',
     ChatMessage = 'chat-message',
-    ChangePlayerColor = 'change-player-color'
+    ChangePlayerColor = 'change-player-color',
+    Error = 'error'
 }
 export class WebsocketService {
     private wssGame;
@@ -56,62 +57,70 @@ export class WebsocketService {
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const self = this;
             ws.on('message', function (data) {
-                const turn: Turn = JSON.parse(data);
+                try {
+                    const turn: Turn = JSON.parse(data);
 
-                switch (turn.action) {
-                    case GameAction.Join:
-                        ws.roomGuid = turn.roomGuid;
-                        self.gameService.joinGame(this.playerGuid, turn.roomGuid);
-                        break;
-                    case GameAction.RoomCreate:
-                        const roomGuid = self.gameService.createRoom(this.playerGuid, turn.gameGuid);
-                        ws.roomGuid = roomGuid;
-                        break;
-                    case GameAction.RoomLeave:
-                        self.gameService.leaveGame(this.playerGuid);
-                        break;
-                    case GameAction.Start:
-                        self.gameService.startGame(this.playerGuid);
-                        break;
-                    case GameAction.Play:
-                        self.gameService.playCard(this.playerGuid, turn.cardGuid);
-                        break;
-                    case GameAction.NextGame:
-                        self.gameService.nextGame(this.playerGuid);
-                        break;
-                    case GameAction.TakeCards:
-                        self.gameService.takeCards(this.playerGuid);
-                        break;
-                    case GameAction.EffectResponse:
-                        self.gameService.effectResponse(this.playerGuid, turn.optionGuid);
-                        break;
-                    case GameAction.ButtonClicked:
-                        self.gameService.buttonClicked(this.playerGuid);
-                        break;
-                    case GameAction.ChangePlayerName:
-                        self.gameService.changePlayerName(this.playerGuid, turn.name);
-                        break;
-                    case GameAction.ChangePlayerColor:
-                        self.gameService.changePlayerColor(this.playerGuid, turn.color);
-                        break;
-                    case GameAction.FocusCard:
-                        self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.FocusCard, {
-                            playerGuid: result.player.guid,
-                            cardGuid: turn.cardGuid
-                        });
-                        break;
-                    case GameAction.UnfocusCard:
-                        self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.UnfocusCard, {
-                            playerGuid: result.player.guid,
-                            cardGuid: turn.cardGuid
-                        });
-                        break;
-                    case GameAction.ChatMessage:
-                        self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.ChatMessage, {
-                            playerGuid: result.player.guid,
-                            text: turn.text
-                        });
-                        break;
+                    switch (turn.action) {
+                        case GameAction.Join:
+                            ws.roomGuid = turn.roomGuid;
+                            self.gameService.joinGame(this.playerGuid, turn.roomGuid);
+                            break;
+                        case GameAction.RoomCreate:
+                            const roomGuid = self.gameService.createRoom(this.playerGuid, turn.gameGuid);
+                            ws.roomGuid = roomGuid;
+                            break;
+                        case GameAction.RoomLeave:
+                            self.gameService.leaveGame(this.playerGuid);
+                            break;
+                        case GameAction.Start:
+                            self.gameService.startGame(this.playerGuid);
+                            break;
+                        case GameAction.Play:
+                            self.gameService.playCard(this.playerGuid, turn.cardGuid);
+                            break;
+                        case GameAction.NextGame:
+                            self.gameService.nextGame(this.playerGuid);
+                            break;
+                        case GameAction.TakeCards:
+                            self.gameService.takeCards(this.playerGuid);
+                            break;
+                        case GameAction.EffectResponse:
+                            self.gameService.effectResponse(this.playerGuid, turn.optionGuid);
+                            break;
+                        case GameAction.ButtonClicked:
+                            self.gameService.buttonClicked(this.playerGuid);
+                            break;
+                        case GameAction.ChangePlayerName:
+                            self.gameService.changePlayerName(this.playerGuid, turn.name);
+                            break;
+                        case GameAction.ChangePlayerColor:
+                            self.gameService.changePlayerColor(this.playerGuid, turn.color);
+                            break;
+                        case GameAction.FocusCard:
+                            self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.FocusCard, {
+                                playerGuid: result.player.guid,
+                                cardGuid: turn.cardGuid
+                            });
+                            break;
+                        case GameAction.UnfocusCard:
+                            self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.UnfocusCard, {
+                                playerGuid: result.player.guid,
+                                cardGuid: turn.cardGuid
+                            });
+                            break;
+                        case GameAction.ChatMessage:
+                            self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.ChatMessage, {
+                                playerGuid: result.player.guid,
+                                text: turn.text
+                            });
+                            break;
+                    }
+                } catch (err) {
+                    self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.Error, {
+                        name: err.name,
+                        message: err.message,
+                        stack: err.stack,
+                    });
                 }
             });
 
