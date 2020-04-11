@@ -81,9 +81,14 @@ export class AppState extends Watchable {
         }));
     }
 
-    public joinRoom(guid: any) {
+    public async joinRoom(guid: any) {
         this.chatMessages.empty();
         this.currentRoomGuid = guid;
+
+        while (this.websocket.readyState === this.websocket.CONNECTING) {
+            await sleep(100);
+        }
+
         this.websocket.send(JSON.stringify({
             action: 'join',
             roomGuid: guid
