@@ -14,7 +14,7 @@ import { Room } from './models/room.model';
 import { EffectIndicator } from './models/effect-indicator.model';
 import { ChatMessage } from './models/chat.model';
 import { StoreArray } from './helpers/store-array';
-import { Watchable } from './helpers/watchable';
+import { Watchable, WatchableString } from './helpers/watchable';
 
 export class AppState extends Watchable {
     public availableGames: StoreArray<Game> = new StoreArray();
@@ -23,7 +23,7 @@ export class AppState extends Watchable {
 
     public currentRoomGuid: string;
     public players: StoreArray<Player> = new StoreArray();
-    public currentPlayerGuid: string;
+    public currentPlayerGuid = new WatchableString();
     public stack: CardStack = new CardStack();;
     public pile: CardPile = new CardPile();
 
@@ -66,7 +66,7 @@ export class AppState extends Watchable {
             if (relativeIndex < 0) {
                 relativeIndex = this.players.length + relativeIndex;
             }
-            player.tick(deltaT, this.screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid === this.me.guid);
+            player.tick(deltaT, this.screenSize, this.table, relativeIndex, this.players.length, this.status, this.currentPlayerGuid.value === this.me.guid);
         }
 
         this.afterTick?.();
@@ -96,7 +96,7 @@ export class AppState extends Watchable {
     }
 
     public playCard(card: Card) {
-        if (this.currentPlayerGuid && this.currentPlayerGuid !== this.me.guid) {
+        if (this.currentPlayerGuid.value && this.currentPlayerGuid.value !== this.me.guid) {
             return;
         }
         this.websocket.send(JSON.stringify({
@@ -310,7 +310,7 @@ export class AppState extends Watchable {
         this.stack.hasCards = false;
         this.endState = undefined;
         this.rotation = GameRotation.None;
-        this.currentPlayerGuid = undefined;
+        this.currentPlayerGuid.set('');
 
         if (this.activeConstantEffectIndicator) {
             this.activeConstantEffectIndicator.hide();
@@ -441,9 +441,9 @@ export class AppState extends Watchable {
     }
 
     private handleNextPlayer(data) {
-        const activePlayer = this.players.find(p => p.guid === this.currentPlayerGuid);
+        const activePlayer = this.players.find(p => p.guid === this.currentPlayerGuid.value);
         const newPlayer = this.players.find(p => p.guid === data.playerGuid);
-        this.currentPlayerGuid = data.playerGuid;
+        this.currentPlayerGuid.set(data.playerGuid);
 
         if(activePlayer){
             activePlayer.isActive = false;

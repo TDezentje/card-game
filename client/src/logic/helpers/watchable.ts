@@ -39,3 +39,12 @@ export abstract class Watchable {
         }
     }
 }
+
+export class WatchableString extends Watchable {
+    public value = '';
+
+    public set(value) {
+        this.value = value;
+        this.update();
+    }
+}

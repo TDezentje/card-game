@@ -562,3 +562,37 @@
         transform: translateX(8px);
     }
 }
+
+.myTurnIndicator {
+    width: 75vw;
+    height: 50vw;
+    background: rgba(255, 255, 255, .6);
+    bottom: -35vw;
+    left: 50%;
+    border-radius: 50%;
+    position: absolute;
+    transform-origin: center;
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+    will-change: transform;
+
+    :global .quality-high :local &.active {
+        animation: myTurnIndicatorAnimation 1.8s ease-out;
+        animation-iteration-count: infinite;
+    }
+}
+
+@keyframes myTurnIndicatorAnimation {
+    0% {
+        transform: translateX(-50%) scale(0);
+        opacity: .8;
+    }
+    60% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0;
+    }
+}

@@ -118,6 +118,10 @@ export function GameElement({
             } />
         } />
 
+        <Watch property={gameState.currentPlayerGuid} render={ currentPlayerGuid => 
+            <div class={`${css.myTurnIndicator} ${currentPlayerGuid.value === gameState.me.guid ? css.active : ''}`}></div>
+        } />
+        
         {
             me && <div class={`${css.hud} ${gameState.currentPlayerGuid === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
                 <div class={css.chat}>
@@ -186,7 +190,5 @@ export function GameElement({
                 {gameState.isAdmin ? <a href="#" onClick={onNextGameClick}>{gameState.endState?.buttonText}</a> : <span class={css.sub}>{gameState.endState?.altText}</span> }
             </div>
         } />
-
-
     </div>;
 }
