@@ -181,7 +181,7 @@ export class AppState extends Watchable {
         if (!text) {
             return;
         }
-        
+
         this.websocket.send(JSON.stringify({
             action: 'chat-message',
             text
@@ -306,6 +306,20 @@ export class AppState extends Watchable {
         this.status = GameStatus.lobby;
         this.hasMinimumPlayers = this.players.length >= this.allRooms.find(r => r.guid === this.currentRoomGuid).minPlayersCount;
 
+        this.pile.cards.empty();
+        this.stack.hasCards = false;
+        this.endState = undefined;
+        this.rotation = GameRotation.None;
+        this.currentPlayerGuid = undefined;
+
+        if (this.activeConstantEffectIndicator) {
+            this.activeConstantEffectIndicator.hide();
+        }
+        
+        if (this.activeEffectIndicator) {
+            this.activeEffectIndicator.hide();
+        }
+
         this.update();
     }
 
@@ -332,7 +346,7 @@ export class AppState extends Watchable {
         this.status = GameStatus.started;
         this.pile.cards.empty();
         this.stack.hasCards = true;
-        this.endState = null;
+        this.endState = undefined;
 
         if (this.activeConstantEffectIndicator) {
             this.activeConstantEffectIndicator.hide();
