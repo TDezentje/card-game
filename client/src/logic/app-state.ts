@@ -178,6 +178,10 @@ export class AppState extends Watchable {
     }
     
     public sendChatMessage(text: string) {
+        if (!text) {
+            return;
+        }
+        
         this.websocket.send(JSON.stringify({
             action: 'chat-message',
             text

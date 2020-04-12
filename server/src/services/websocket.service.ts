@@ -109,6 +109,9 @@ export class WebsocketService {
                             });
                             break;
                         case GameAction.ChatMessage:
+                            if (!turn.text) {
+                                break;
+                            }
                             self.sendMessageToRoomByGuid(ws.roomGuid, GameAction.ChatMessage, {
                                 playerGuid: result.player.guid,
                                 text: turn.text

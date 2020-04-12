@@ -192,7 +192,7 @@ export class CrazyEights extends GameLogic {
     }
 
     public answerMultipleChoice(playerGuid: string, answerGuid: string) {
-        if (!this.activeMultipleChoice && playerGuid !== this.activeMultipleChoice.playerGuid) {
+        if (!this.activeMultipleChoice || playerGuid !== this.activeMultipleChoice.playerGuid) {
             return;
         }
 
