@@ -131,9 +131,6 @@
     top: 0;
     width: 100px;
     height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     border-radius: 50%;
     box-shadow: 0 7px 8px -4px rgba(0,0,0,.2), 0 12px 17px 2px rgba(0,0,0,.14), 0 5px 22px 4px rgba(0,0,0,.12);
     
@@ -156,8 +153,23 @@
         z-index: 2;
     }
 
+    .scaler {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform-origin: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        will-change: transform;
+    }
+
     &.active {
-        .indicator {
+        .indicator1,
+        .indicator2,
+        .indicator3 {
             position: absolute;
             top: 0;
             left: 0;
@@ -168,9 +180,11 @@
             border-radius: 50%;
             z-index: 0;
             transform-origin: center;
+            will-change: transform;
 
             :global .quality-high :local & {
-                animation: pulse 1.3s ease-out;
+                animation-duration: 2.6s;
+                animation-timing-function: ease-in;
                 animation-iteration-count: infinite;
             }
 
@@ -179,21 +193,111 @@
                 background: rgba(255, 0, 0, .4);
             }
         }
+
+        .indicator1 {
+            opacity: .6;
+            animation-name: pulse1;
+        }
+
+        .indicator2 {
+            opacity: .45;
+            animation-name: pulse2;
+        }
+
+        .indicator3 {
+            opacity: .3;
+            animation-name: pulse3;
+        }
+
+        .scaler {
+            :global .quality-high :local & {
+                animation: pulse 2.6s ease-in;
+                animation-iteration-count: infinite;
+                transform-origin: center;
+            }
+        }
+
+        :global .quality-low :local & {
+            .indicator1,
+            .indicator2 {
+                display: none;
+            }
+        }
     }
 }
 
 @keyframes pulse {
     0% {
         transform: scale(1);
-        opacity: .8;
     }
-    66% {
-        transform: scale(1.4);
-        opacity: .0;
+    15% {
+        transform: scale(.9);
+    }
+    22% {
+        transform: scale(.9);
+    }
+    32% {
+        transform: scale(1.05);
+    }
+    35% {
+        transform: scale(1);
     }
     100% {
-        transform: scale(1.4);
-        opacity: .0;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse1 {
+    0% {
+        transform: scale(.9);
+    }
+    13% {
+        transform: scale(1.15);
+    }
+    15% {
+        transform: scale(1.12);
+    }
+    22% {
+        transform: scale(.9);
+    }
+    100% {
+        transform: scale(.9);
+    }
+}
+
+@keyframes pulse2 {
+    0% {
+        transform: scale(.9);
+    }
+    13% {
+        transform: scale(1.40);
+    }
+    17% {
+        transform: scale(1.38);
+    }
+    30% {
+        transform: scale(.9);
+    }
+    100% {
+        transform: scale(.9);
+    }
+}
+
+@keyframes pulse3 {
+    0% {
+        transform: scale(.9);
+    }
+    13% {
+        transform: scale(1.65);
+    }
+    18% {
+        transform: scale(1.62);
+    }
+    37% {
+        transform: scale(.9);
+    }
+    100% {
+        transform: scale(.9);
     }
 }
 
@@ -566,33 +670,17 @@
 .myTurnIndicator {
     width: 75vw;
     height: 50vw;
-    background: rgba(255, 255, 255, .6);
+    background: radial-gradient(hsla(0,0%,100%,.2) 0,hsla(0,0%,100%,.03) 50%,transparent 65%);
     bottom: -35vw;
     left: 50%;
     border-radius: 50%;
     position: absolute;
     transform-origin: center;
     transform: translateX(-50%) scale(0);
-    opacity: 0;
     will-change: transform;
+    transition: transform .3s cubic-bezier(0.4, 0.0, 0.2, 1);
 
     :global .quality-high :local &.active {
-        animation: myTurnIndicatorAnimation 1.8s ease-out;
-        animation-iteration-count: infinite;
-    }
-}
-
-@keyframes myTurnIndicatorAnimation {
-    0% {
-        transform: translateX(-50%) scale(0);
-        opacity: .8;
-    }
-    60% {
         transform: translateX(-50%) scale(1);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(-50%) scale(1);
-        opacity: 0;
     }
 }

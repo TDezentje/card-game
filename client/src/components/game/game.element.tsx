@@ -123,7 +123,7 @@ export function GameElement({
         } />
         
         {
-            me && <div class={`${css.hud} ${gameState.currentPlayerGuid === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
+            me && <div class={`${css.hud} ${gameState.currentPlayerGuid.value === me.guid ? css.active : ''}`} style={{ borderColor: me.color }}>
                 <div class={css.chat}>
                     <div class={css.messages} id="chat">
                         <Watch property={gameState.chatMessages} render={chatMessages => 
@@ -170,9 +170,13 @@ export function GameElement({
             .filter(p => p.guid !== gameState.me.guid)
             .map(player => <Watch key={player.guid} property={player} render={(p) =>
                 <div class={`${css.nameTag} ${p.isActive ? css.active : ''}`} style={{transform: `translate(${p.positionX}px, ${p.positionY}px) translate(-50%, -50%)`}}>
-                    <div class={css.indicator} />
-                    <div class={css.background} style={{background: p.color }} />
-                    <span>{p.name}</span>
+                    <div class={css.indicator1} />
+                    <div class={css.indicator2} />
+                    <div class={css.indicator3} />
+                    <div class={css.scaler}>
+                        <div class={css.background} style={{background: p.color }} />
+                        <span>{p.name}</span>
+                    </div>
                 </div>
             } />)
         } />
