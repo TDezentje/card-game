@@ -122,10 +122,12 @@ export class GameOfHearts extends GameLogic {
                     break;
                 }
             }
-            let isWinner = {
+            let isLoser = {
                 scorePlayerGuid: "",
                 score: 0
             };
+
+
             for (const scorePlayerGuid of Object.keys(this.playedCards)) {
                 const player = this.players.find(p => p.guid === scorePlayerGuid);
                 if (!this.totalScore[scorePlayerGuid]) {
@@ -133,14 +135,14 @@ export class GameOfHearts extends GameLogic {
                 }
                 
                 this.totalScore[scorePlayerGuid] += playerWithAllPoints ? playerWithAllPoints === scorePlayerGuid ? 0 : 15 : this.score[scorePlayerGuid];
-                if (this.totalScore[scorePlayerGuid] >= 50 && isWinner?.score < this.totalScore[scorePlayerGuid]) {
-                    isWinner = { scorePlayerGuid, score: this.score[scorePlayerGuid] };
+                if (this.totalScore[scorePlayerGuid] >= 50 && isLoser?.score < this.totalScore[scorePlayerGuid]) {
+                    isLoser = { scorePlayerGuid, score: this.totalScore[scorePlayerGuid] };
                 }
                 text += `\n${player.name}: ${this.totalScore[scorePlayerGuid] || 0}`;
             }
 
-            if (isWinner.scorePlayerGuid) {
-                const player = this.players.find(p => p.guid === isWinner.scorePlayerGuid);
+            if (isLoser.scorePlayerGuid) {
+                const player = this.players.find(p => p.guid === isLoser.scorePlayerGuid);
                 this.onGameover(this, {
                     text: `Loser!\n${player.name} lost the game`,
                     buttonText: 'Next game',
