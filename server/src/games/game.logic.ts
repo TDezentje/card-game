@@ -19,6 +19,13 @@ export class GameEffect {
     }
 }
 
+
+export class GameScore {
+    public constructor(public name: string, public score: any) {
+
+    }
+}
+
 export class GamePlayer extends Player {
     public cards: Card[];
 
@@ -87,4 +94,5 @@ export abstract class GameLogic {
     public onNextPlayer: (game: GameLogic, playerGuid: string) => void;
     public onEffect: (game: GameLogic, gameEffect: GameEffect) => void;
     public onPlayerLeft: (game: GameLogic, playerGuid: string) => void;
+    public onUpdateScore: (game: GameLogic, score: GameScore[]) => void;
 }

@@ -15,10 +15,12 @@ import { EffectIndicator } from './models/effect-indicator.model';
 import { ChatMessage } from './models/chat.model';
 import { StoreArray } from './helpers/store-array';
 import { Watchable, WatchableString } from './helpers/watchable';
+import { Score } from './models/score.model';
 
 export class AppState extends Watchable {
     public availableGames: StoreArray<Game> = new StoreArray();
     public allRooms: StoreArray<Room> = new StoreArray();
+    public score: StoreArray<Score> = new StoreArray();
     public me: Player = new Player({});
 
     public currentRoomGuid: string;
@@ -249,6 +251,9 @@ export class AppState extends Watchable {
             case 'chat-message':
                 this.handleChatMessage(data.actionData);
                 break;
+            case 'update-score':
+                this.handleUpdateScore(data.actionData);
+                break;
             default:
                 console.log(data);
                 break;
@@ -290,7 +295,7 @@ export class AppState extends Watchable {
     }
 
     private handleRoomRemoved(data) {
-        if (!this.currentRoomGuid || this.currentRoomGuid === data.roomGuid) {
+        if (this.currentRoomGuid && this.currentRoomGuid === data.roomGuid) {
             route('/');
             this.currentRoomGuid = '';
         }
@@ -311,6 +316,7 @@ export class AppState extends Watchable {
         this.endState = undefined;
         this.rotation = GameRotation.None;
         this.currentPlayerGuid.set('');
+        this.score.empty();
 
         if (this.activeConstantEffectIndicator) {
             this.activeConstantEffectIndicator.hide();
@@ -515,6 +521,10 @@ export class AppState extends Watchable {
                 chat.scrollTop = scrollHeight - height;
             }
         });  
+    }
+
+    private handleUpdateScore(data) {
+        this.score.setValue(data);
     }
 
     public handleEffect(data) {

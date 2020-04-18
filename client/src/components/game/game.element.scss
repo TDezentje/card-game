@@ -380,6 +380,19 @@
     }
 }
 
+.scoreboard {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    color: white;
+
+    th {
+        font-weight: bold;
+    }
+}
+
 .hud {
     position: absolute;
     bottom: 0;

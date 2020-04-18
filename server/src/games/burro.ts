@@ -1,5 +1,5 @@
 import { Card } from 'models/card.model';
-import { GameLogic, GameEffect, GameEffectType, GamePlayer } from './game.logic';
+import { GameLogic, GameEffect, GameEffectType, GamePlayer, GameScore } from './game.logic';
 import { Player } from 'models/player.model';
 
 export class Burro extends GameLogic {
@@ -12,14 +12,14 @@ export class Burro extends GameLogic {
     protected startCardAmountInHand = 4;
 
     private score: {
-        [key: string]: string[];   
+        [key: string]: string[];
     } = {};
     private invalidHandClicked: boolean;
     private whoClicked = [];
 
     public startGame(players: Player[]) {
         super.startGame(players);
-        
+
         this.onEffect(this, new GameEffect(GameEffectType.RotationChanged, {
             rotationClockwise: true
         }));
@@ -58,7 +58,7 @@ export class Burro extends GameLogic {
         this.onMoveCard(this, player.guid, receivingPlayer.guid, card);
     }
 
-    public buttonClicked(playerGuid: string){
+    public buttonClicked(playerGuid: string) {
         if (this.invalidHandClicked) {
             return;
         }
@@ -71,7 +71,7 @@ export class Burro extends GameLogic {
             }
 
             return;
-        } else if(this.whoClicked.length > 0) {
+        } else if (this.whoClicked.length > 0) {
             return;
         }
 
@@ -127,6 +127,13 @@ export class Burro extends GameLogic {
 
     public nextGame() {
         this.startGame(this.players);
+        const scoreBoard = this.players.map(player => 
+            new GameScore(
+                player.name, 
+                `${this.score[player.guid]?.join(' ') || ''}${new Array(Burro.gameName.length - (this.score[player.guid]?.length || 0) + 1).join(' _')}`
+            )
+        );
+        this.onUpdateScore(this, scoreBoard);
     }
 
     public resetGame() {
@@ -144,6 +151,13 @@ export class Burro extends GameLogic {
             return 0;
         }).splice(0, Burro.cards.length - (this.players.length * this.startCardAmountInHand));
         this.cardsOnPile = [];
+        const scoreBoard = this.players.map(player => 
+            new GameScore(
+                player.name, 
+                `${new Array(Burro.gameName.length - (this.score[player.guid]?.length || 0) + 1).join(' _')}`
+            )
+        );
+        this.onUpdateScore(this, scoreBoard);
     }
 
     private static cards: Card[] = [

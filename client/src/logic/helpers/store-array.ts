@@ -65,4 +65,8 @@ export class StoreArray<T> extends Watchable {
     public empty() {
         this.value.splice(0);
     }
+
+    public any() {
+        return this.value?.length > 0;
+    }
 }

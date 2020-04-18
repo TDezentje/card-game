@@ -29,6 +29,7 @@ export enum GameAction {
     ChangePlayerName = 'change-player-name',
     ChatMessage = 'chat-message',
     ChangePlayerColor = 'change-player-color',
+    UpdateScore = 'update-score',
     Error = 'error'
 }
 export class WebsocketService {

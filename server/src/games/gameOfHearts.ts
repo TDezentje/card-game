@@ -1,5 +1,5 @@
 import { Card } from 'models/card.model';
-import { GameLogic, GameEffect, GameEffectType, GamePlayer } from './game.logic';
+import { GameLogic, GameEffect, GameEffectType, GamePlayer, GameScore } from './game.logic';
 import { Player } from 'models/player.model';
 
 export class GameOfHearts extends GameLogic {
@@ -164,6 +164,13 @@ export class GameOfHearts extends GameLogic {
         this.playedCards = {};
         this.cardsOnPile = [];
         this.onEffect(this, new GameEffect(GameEffectType.ResetPile, { emptyPile: true }));
+        const scoreBoard = this.players.map(player => 
+            new GameScore(
+                player.name,
+                this.totalScore[player.guid] || 0
+            )
+        );
+        this.onUpdateScore(this, scoreBoard);
     }
 
     public buttonClicked() {

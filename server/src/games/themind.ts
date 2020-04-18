@@ -1,5 +1,5 @@
 import { Card } from 'models/card.model';
-import { GameLogic } from './game.logic';
+import { GameLogic, GameScore } from './game.logic';
 
 export class TheMind extends GameLogic {
     public static gameName = "The mind";
@@ -7,8 +7,11 @@ export class TheMind extends GameLogic {
     public static minPlayers = 2;
     private level = 1;
     private isGameOver = false;
+    private hasFailed = false;
     protected startCardAmountInHand = 1;
     protected hasStack = false;
+
+    private lives = 3;
 
     public playCard(playerGuid: string, cardGuid: string) {
         if (this.isGameOver) {
@@ -21,7 +24,11 @@ export class TheMind extends GameLogic {
         this.onPlayCard(this, playerGuid, card);
 
         if (!this.isValidCard(cardGuid)) {
-            this.isGameOver = true;
+            this.lives--;
+            this.hasFailed = true;
+            if (this.lives === 0) {
+                this.isGameOver = true;
+            }
             this.onGameover(this, {
                 text: 'GAME OVER!',
                 buttonText: 'Retry',
@@ -41,7 +48,7 @@ export class TheMind extends GameLogic {
         }
     }
 
-    public buttonClicked(){
+    public buttonClicked() {
 
     }
 
@@ -64,21 +71,24 @@ export class TheMind extends GameLogic {
 
         if (this.isGameOver) {
             this.isGameOver = false;
-        } else {
+        } else if (!this.hasFailed) {
             this.level += 1;
             this.startCardAmountInHand += 1;
         }
-
+        this.hasFailed = false;
+        this.onUpdateScore(this, [new GameScore('Lives', this.lives)]);
         this.startGame(this.players);
     }
 
     public resetGame() {
         if (this.isGameOver) {
+            this.lives = 3;
             this.level = 1;
             this.startCardAmountInHand = 1;
         }
         this.cardsToUse = JSON.parse(JSON.stringify(TheMind.cards));
         this.cardsOnPile = [];
+        this.onUpdateScore(this, [new GameScore('Lives', this.lives)]);
     }
 
     private static cards: Card[] = [

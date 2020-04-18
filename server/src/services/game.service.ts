@@ -4,7 +4,7 @@ import { Burro } from 'games/burro';
 import { Player } from 'models/player.model';
 import { PlayerService } from './player.service';
 import { RoomService } from './room.service';
-import { GameLogic, GameEffect, GamePlayer } from 'games/game.logic';
+import { GameLogic, GameEffect, GamePlayer, GameScore } from 'games/game.logic';
 import { Room } from 'models/room.model';
 import { WebsocketService, GameAction } from './websocket.service';
 import { Card } from 'models/card.model';
@@ -91,6 +91,7 @@ export class GameService {
         instance.onTakeCards = this.onTakeCards.bind(this);
         instance.onEffect = this.onEffect.bind(this);
         instance.onGameover = this.onGameover.bind(this);
+        instance.onUpdateScore = this.onUpdateScore.bind(this);
 
         room = this.roomService.createRoom(instance);
         this.sendMessageToEverybody(GameAction.RoomCreate, {
@@ -302,6 +303,10 @@ export class GameService {
         this.sendMessageToRoom(game, GameAction.PlayerLeft, {
             playerGuid
         }, [playerGuid]);
+    }
+
+    public onUpdateScore(game: GameLogic, score: GameScore[]){
+        this.sendMessageToRoom(game, GameAction.UpdateScore, score);
     }
 
     public sendMessageToRoom(game: GameLogic, action: GameAction, message?: any, exceptPlayerGuids?: string[]) {
