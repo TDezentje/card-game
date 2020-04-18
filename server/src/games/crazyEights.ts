@@ -241,6 +241,8 @@ export class CrazyEights extends GameLogic {
 
         if ((lastPlayedCard.corner.leftTop === '2' || lastPlayedCard.corner.leftTop === '✪') && this.activeTakeCard) {
             return ['2', '✪'].includes(card.corner.leftTop);
+        } else if (lastPlayedCard.corner.leftTop === '✪' && card.corner.leftTop === '2') {
+            return true;
         }
 
         // Same type of card or same display of card
