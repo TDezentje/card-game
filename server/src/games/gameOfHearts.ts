@@ -72,8 +72,10 @@ export class GameOfHearts extends GameLogic {
         this.currentPlayer = this.players[currentPlayerIdx];
 
         if (this.players.length === Object.keys(this.playedCards).length) {
-            this.calculateScore();
-            this.resetPile();
+            setTimeout(() => {
+                this.calculateScore();
+                this.resetPile();
+            }, 1000);
         }
     }
 
