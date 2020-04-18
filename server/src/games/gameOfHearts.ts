@@ -169,7 +169,7 @@ export class GameOfHearts extends GameLogic {
         const scoreBoard = this.players.map(player => 
             new GameScore(
                 player.name,
-                this.totalScore[player.guid] || 0
+                (this.totalScore[player.guid] || 0) + (this.score[player.guid] || 0)
             )
         );
         this.onUpdateScore(this, scoreBoard);
