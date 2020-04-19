@@ -8,6 +8,7 @@ export class GameOfHearts extends GameLogic {
     public static minPlayers = 4;
     public static maxPlayers = 4;
     protected hasStack = false;
+    private firstTime: boolean = true;
 
     protected startCardAmountInHand = 8;
     private _currentPlayer: GamePlayer;
@@ -35,11 +36,19 @@ export class GameOfHearts extends GameLogic {
     public startGame(players: Player[]) {
         super.startGame(players);
 
+        for (const player of this.players) {
+            this.score[player.guid] = 0;
+            if (this.firstTime) {
+                this.totalScore[player.guid] = 0;
+            }
+        }
+        this.firstTime = false;
         const playerIdx = this.players.findIndex(p => p.cards.some(c => c.corner.leftTop === "7" && c.corner.leftBottom === "♣"));
         this.currentPlayer = this.players[playerIdx];
         this.onEffect(this, new GameEffect(GameEffectType.RotationChanged, {
             rotationClockwise: true
         }));
+        this.onUpdateScore(this, this.players.map(player => new GameScore(player.name, this.totalScore[player.guid])));
     }
 
     public takeCards() {
@@ -95,10 +104,6 @@ export class GameOfHearts extends GameLogic {
             }
         }
 
-        if (!this.score[scorePlayerGuid]) {
-            this.score[scorePlayerGuid] = 0;
-        }
-
         for (const card of Object.values(this.playedCards)) {
             if (card.corner.leftBottom === "♥") {
                 this.score[scorePlayerGuid] += 1;
@@ -130,10 +135,6 @@ export class GameOfHearts extends GameLogic {
 
             for (const scorePlayerGuid of Object.keys(this.playedCards)) {
                 const player = this.players.find(p => p.guid === scorePlayerGuid);
-                if (!this.totalScore[scorePlayerGuid]) {
-                    this.totalScore[scorePlayerGuid] = 0;
-                }
-                
                 this.totalScore[scorePlayerGuid] += playerWithAllPoints ? playerWithAllPoints === scorePlayerGuid ? 0 : 15 : this.score[scorePlayerGuid];
                 if (this.totalScore[scorePlayerGuid] >= 50 && isLoser?.score < this.totalScore[scorePlayerGuid]) {
                     isLoser = { scorePlayerGuid, score: this.totalScore[scorePlayerGuid] };
@@ -150,7 +151,7 @@ export class GameOfHearts extends GameLogic {
                 });
             } else {
                 this.onGameover(this, {
-                    text: `Score\n${text}`,
+                    text: 'Round over',
                     buttonText: 'Next game',
                     altText: 'Wait for the gamemaster'
                 });
@@ -166,10 +167,10 @@ export class GameOfHearts extends GameLogic {
         this.playedCards = {};
         this.cardsOnPile = [];
         this.onEffect(this, new GameEffect(GameEffectType.ResetPile, { emptyPile: true }));
-        const scoreBoard = this.players.map(player => 
+        const scoreBoard = this.players.map(player =>
             new GameScore(
                 player.name,
-                (this.totalScore[player.guid] || 0) + (this.score[player.guid] || 0)
+                player.cards.length === 0 ? this.totalScore[player.guid] : this.totalScore[player.guid] + this.score[player.guid]
             )
         );
         this.onUpdateScore(this, scoreBoard);
@@ -200,10 +201,19 @@ export class GameOfHearts extends GameLogic {
 
     public nextGame() {
         this.startGame(this.players);
-        this.score = {};
-        if (Object.values(this.totalScore).some(v => v >= 50)) {
-            this.totalScore = {};
+        for (const player of this.players) {
+            this.score[player.guid] = 0;
+            if (Object.values(this.totalScore).some(v => v >= 50)) {
+                this.totalScore[player.guid] = 0;
+            }
         }
+        const scoreBoard = this.players.map(player =>
+            new GameScore(
+                player.name,
+                this.totalScore[player.guid] + this.score[player.guid]
+            )
+        );
+        this.onUpdateScore(this, scoreBoard);
     }
 
     public resetGame() {
