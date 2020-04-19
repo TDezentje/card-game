@@ -8,7 +8,7 @@ export class GameOfHearts extends GameLogic {
     public static minPlayers = 4;
     public static maxPlayers = 4;
     protected hasStack = false;
-    private firstTime: boolean = true;
+    private firstTime = true;
 
     protected startCardAmountInHand = 8;
     private _currentPlayer: GamePlayer;
